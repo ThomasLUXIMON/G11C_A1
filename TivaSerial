@@ -1,0 +1,539 @@
+<?php
+/**
+ * TivaSerial.php
+ * Classes pour la communication série avec la carte TIVA C
+ * Système de détection de personne assise
+ */
+
+// Configuration par défaut
+if (!defined('SERIAL_PORT')) {
+    define('SERIAL_PORT', '/dev/ttyACM0'); // Linux
+    // define('SERIAL_PORT', 'COM3'); // Windows
+}
+if (!defined('BAUD_RATE')) {
+    define('BAUD_RATE', 115200);
+}
+if (!defined('DATA_FILE')) {
+    define('DATA_FILE', 'data/seat_data.json');
+}
+if (!defined('LOG_FILE')) {
+    define('LOG_FILE', 'logs/seat_log.txt');
+}
+
+/**
+ * Classe pour gérer la communication série
+ */
+class TivaSerialCommunication {
+    private $serial;
+    private $port;
+    private $isWindows;
+    
+    public function __construct($port = SERIAL_PORT) {
+        $this->port = $port;
+        $this->isWindows = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+    }
+    
+    /**
+     * Ouvre la connexion série
+     */
+    public function connect() {
+        if ($this->isWindows) {
+            // Windows
+            exec("mode {$this->port}: baud=" . BAUD_RATE . " data=8 stop=1 parity=n xon=off");
+            $this->serial = fopen($this->port, "r+");
+        } else {
+            // Linux/Mac
+            exec("stty -F {$this->port} " . BAUD_RATE . " cs8 -cstopb -parenb -echo raw");
+            $this->serial = fopen($this->port, "r+");
+        }
+        
+        if (!$this->serial) {
+            throw new Exception("Impossible d'ouvrir le port série {$this->port}");
+        }
+        
+        // Attendre que la carte soit prête
+        sleep(2);
+        
+        // Passer en mode JSON
+        $this->sendCommand('J');
+        
+        return true;
+    }
+    
+    /**
+     * Lit une ligne depuis le port série
+     */
+    public function readLine($timeout = 1) {
+        if (!$this->serial) return false;
+        
+        stream_set_timeout($this->serial, $timeout);
+        $line = fgets($this->serial);
+        $info = stream_get_meta_data($this->serial);
+        
+        if ($info['timed_out']) {
+            return false;
+        }
+        
+        return trim($line);
+    }
+    
+    /**
+     * Lit les données JSON
+     */
+    public function readJson($timeout = 1) {
+        $line = $this->readLine($timeout);
+        if (!$line) return null;
+        
+        // Vérifier si c'est du JSON
+        if (substr($line, 0, 1) === '{') {
+            $data = json_decode($line, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $data;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Envoie une commande à la carte
+     */
+    public function sendCommand($command) {
+        if (!$this->serial) return false;
+        
+        fwrite($this->serial, $command);
+        fflush($this->serial);
+        return true;
+    }
+    
+    /**
+     * Ferme la connexion
+     */
+    public function disconnect() {
+        if ($this->serial) {
+            // Repasser en mode normal avant de fermer
+            $this->sendCommand('N');
+            fclose($this->serial);
+            $this->serial = null;
+        }
+    }
+    
+    /**
+     * Vérifie si la connexion est active
+     */
+    public function isConnected() {
+        return $this->serial !== null;
+    }
+    
+    /**
+     * Parse les données reçues de la carte (mode texte)
+     */
+    public function parseData($line) {
+        $data = [
+            'timestamp' => time(),
+            'raw_line' => $line
+        ];
+        
+        // Extraction de la distance
+        if (preg_match('/Distance:\s*([\d.]+)\s*cm/', $line, $matches)) {
+            $data['distance'] = floatval($matches[1]);
+        }
+        
+        // Extraction de l'état
+        if (strpos($line, 'OCCUPÉ') !== false) {
+            $data['state'] = 'occupied';
+        } elseif (strpos($line, 'LIBRE') !== false) {
+            $data['state'] = 'free';
+        }
+        
+        // Extraction du compteur
+        if (preg_match('/Compteur.*?(\d+)/', $line, $matches)) {
+            $data['counter'] = intval($matches[1]);
+        }
+        
+        // Extraction du temps d'occupation
+        if (preg_match('/\((\d+)s\)/', $line, $matches)) {
+            $data['occupation_time'] = intval($matches[1]);
+        }
+        
+        // Détection des événements
+        if (strpos($line, 'PERSONNE ASSISE DÉTECTÉE') !== false) {
+            $data['event'] = 'person_detected';
+        } elseif (strpos($line, 'SIÈGE LIBÉRÉ') !== false) {
+            $data['event'] = 'person_left';
+            if (preg_match('/Durée:\s*(\d+)\s*min\s*(\d+)\s*sec/', $line, $matches)) {
+                $data['total_duration'] = ($matches[1] * 60) + $matches[2];
+            }
+        } elseif (strpos($line, 'ALERTE: Occupation prolongée') !== false) {
+            $data['event'] = 'prolonged_occupation';
+        } elseif (strpos($line, 'ERREUR CAPTEUR') !== false) {
+            $data['event'] = 'sensor_error';
+        }
+        
+        return $data;
+    }
+}
+
+/**
+ * Classe pour gérer les données
+ */
+class SeatDataManager {
+    private $dataFile;
+    private $logFile;
+    
+    public function __construct($dataFile = DATA_FILE, $logFile = LOG_FILE) {
+        $this->dataFile = $dataFile;
+        $this->logFile = $logFile;
+        
+        // Créer les dossiers si nécessaire
+        $dataDir = dirname($this->dataFile);
+        $logDir = dirname($this->logFile);
+        
+        if (!is_dir($dataDir)) {
+            mkdir($dataDir, 0777, true);
+        }
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+    }
+    
+    /**
+     * Sauvegarde les données actuelles
+     */
+    public function saveCurrentData($data) {
+        $current = $this->loadCurrentData();
+        
+        // Mise à jour des données actuelles
+        $current['last_update'] = time();
+        
+        // Mise à jour depuis les données JSON de la carte
+        if (isset($data['distance'])) {
+            $current['distance'] = $data['distance'];
+        }
+        if (isset($data['state'])) {
+            $current['state'] = $data['state'];
+        }
+        if (isset($data['counter'])) {
+            $current['counter'] = $data['counter'];
+        }
+        if (isset($data['occupation_time'])) {
+            $current['occupation_time'] = $data['occupation_time'];
+        }
+        if (isset($data['threshold'])) {
+            $current['threshold'] = $data['threshold'];
+        }
+        if (isset($data['empty_distance'])) {
+            $current['empty_distance'] = $data['empty_distance'];
+        }
+        
+        // Mise à jour des statistiques globales
+        if (isset($data['total_time'])) {
+            $current['stats']['total_time'] = $data['total_time'];
+        }
+        if (isset($data['longest_occupation'])) {
+            $current['stats']['longest_occupation'] = $data['longest_occupation'];
+        }
+        if (isset($data['average_duration'])) {
+            $current['stats']['average_duration'] = $data['average_duration'];
+        }
+        
+        // Gestion des événements
+        if (isset($data['event'])) {
+            if (!isset($current['events'])) {
+                $current['events'] = [];
+            }
+            
+            $event = [
+                'type' => $data['event'],
+                'timestamp' => $data['timestamp'] ?? time()
+            ];
+            
+            if (isset($data['duration'])) {
+                $event['duration'] = $data['duration'];
+            }
+            
+            array_unshift($current['events'], $event);
+            
+            // Garder seulement les 100 derniers événements
+            $current['events'] = array_slice($current['events'], 0, 100);
+            
+            // Log de l'événement
+            $this->logEvent($data);
+        }
+        
+        // Mise à jour des statistiques
+        if (!isset($current['stats'])) {
+            $current['stats'] = [
+                'total_occupations' => 0,
+                'total_time' => 0,
+                'average_duration' => 0,
+                'longest_occupation' => 0
+            ];
+        }
+        
+        // Synchroniser avec les stats de la carte
+        if (isset($data['counter'])) {
+            $current['stats']['total_occupations'] = $data['counter'];
+        }
+        
+        file_put_contents($this->dataFile, json_encode($current, JSON_PRETTY_PRINT));
+    }
+    
+    /**
+     * Charge les données actuelles
+     */
+    public function loadCurrentData() {
+        if (file_exists($this->dataFile)) {
+            $content = file_get_contents($this->dataFile);
+            return json_decode($content, true) ?: [];
+        }
+        return [
+            'state' => 'unknown',
+            'distance' => null,
+            'counter' => 0,
+            'occupation_time' => 0,
+            'threshold' => 25.0,
+            'empty_distance' => 45.0,
+            'last_update' => null,
+            'events' => [],
+            'stats' => [
+                'total_occupations' => 0,
+                'total_time' => 0,
+                'average_duration' => 0,
+                'longest_occupation' => 0
+            ]
+        ];
+    }
+    
+    /**
+     * Enregistre un événement dans le log
+     */
+    private function logEvent($data) {
+        $logEntry = date('Y-m-d H:i:s') . ' - ';
+        $logEntry .= ($data['event'] ?? 'unknown') . ' - ';
+        
+        if (isset($data['distance'])) {
+            $logEntry .= 'Distance: ' . $data['distance'] . 'cm - ';
+        }
+        
+        if (isset($data['duration'])) {
+            $logEntry .= 'Durée: ' . $data['duration'] . 's - ';
+        }
+        
+        $logEntry .= ($data['raw_line'] ?? 'No raw data') . PHP_EOL;
+        
+        file_put_contents($this->logFile, $logEntry, FILE_APPEND);
+    }
+    
+    /**
+     * Réinitialise toutes les données
+     */
+    public function resetData() {
+        $default = [
+            'state' => 'unknown',
+            'distance' => null,
+            'counter' => 0,
+            'occupation_time' => 0,
+            'threshold' => 25.0,
+            'empty_distance' => 45.0,
+            'last_update' => time(),
+            'events' => [],
+            'stats' => [
+                'total_occupations' => 0,
+                'total_time' => 0,
+                'average_duration' => 0,
+                'longest_occupation' => 0
+            ]
+        ];
+        
+        file_put_contents($this->dataFile, json_encode($default, JSON_PRETTY_PRINT));
+        
+        // Log de la réinitialisation
+        $this->logEvent([
+            'event' => 'system_reset',
+            'timestamp' => time(),
+            'raw_line' => 'Données réinitialisées'
+        ]);
+    }
+}
+
+/**
+ * Classe pour l'export des données
+ */
+class DataExporter {
+    private $dataManager;
+    
+    public function __construct() {
+        $this->dataManager = new SeatDataManager();
+    }
+    
+    /**
+     * Export en CSV
+     */
+    public function exportToCSV($filename = null) {
+        if (!$filename) {
+            $filename = 'exports/seat_data_' . date('Y-m-d_H-i-s') . '.csv';
+        }
+        
+        $dir = dirname($filename);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+        
+        $data = $this->dataManager->loadCurrentData();
+        $events = $data['events'] ?? [];
+        
+        $fp = fopen($filename, 'w');
+        
+        // En-têtes
+        fputcsv($fp, ['Date', 'Heure', 'Type', 'Durée (sec)', 'Compteur']);
+        
+        // Données
+        $counter = $data['counter'] ?? 0;
+        foreach ($events as $event) {
+            $date = date('Y-m-d', $event['timestamp']);
+            $time = date('H:i:s', $event['timestamp']);
+            $type = $this->translateEventType($event['type']);
+            $duration = $event['duration'] ?? '';
+            
+            fputcsv($fp, [$date, $time, $type, $duration, $counter]);
+            
+            if ($event['type'] == 'person_left') {
+                $counter--;
+            }
+        }
+        
+        fclose($fp);
+        return $filename;
+    }
+    
+    /**
+     * Export en JSON
+     */
+    public function exportToJSON($filename = null) {
+        if (!$filename) {
+            $filename = 'exports/seat_data_' . date('Y-m-d_H-i-s') . '.json';
+        }
+        
+        $dir = dirname($filename);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+        
+        $data = $this->dataManager->loadCurrentData();
+        file_put_contents($filename, json_encode($data, JSON_PRETTY_PRINT));
+        
+        return $filename;
+    }
+    
+    /**
+     * Génère un rapport HTML
+     */
+    public function generateHTMLReport($filename = null) {
+        if (!$filename) {
+            $filename = 'exports/rapport_' . date('Y-m-d_H-i-s') . '.html';
+        }
+        
+        $dir = dirname($filename);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+        
+        $data = $this->dataManager->loadCurrentData();
+        $stats = $data['stats'] ?? [];
+        
+        $html = '<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport Système de Détection - ' . date('d/m/Y') . '</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        .stats { background: #f0f0f0; padding: 15px; border-radius: 5px; }
+        .stat-item { margin: 10px 0; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Rapport du Système de Détection de Siège</h1>
+    <p>Généré le ' . date('d/m/Y à H:i:s') . '</p>
+    
+    <div class="stats">
+        <h2>Statistiques Globales</h2>
+        <div class="stat-item"><strong>Nombre total d\'occupations:</strong> ' . 
+            ($stats['total_occupations'] ?? 0) . '</div>
+        <div class="stat-item"><strong>Temps total d\'occupation:</strong> ' . 
+            $this->formatTime($stats['total_time'] ?? 0) . '</div>
+        <div class="stat-item"><strong>Durée moyenne:</strong> ' . 
+            $this->formatTime($stats['average_duration'] ?? 0) . '</div>
+        <div class="stat-item"><strong>Plus longue occupation:</strong> ' . 
+            $this->formatTime($stats['longest_occupation'] ?? 0) . '</div>
+    </div>
+    
+    <h2>Derniers Événements</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Heure</th>
+                <th>Type</th>
+                <th>Durée</th>
+            </tr>
+        </thead>
+        <tbody>';
+        
+        $events = array_slice($data['events'] ?? [], 0, 50);
+        foreach ($events as $event) {
+            $html .= '<tr>
+                <td>' . date('d/m/Y', $event['timestamp']) . '</td>
+                <td>' . date('H:i:s', $event['timestamp']) . '</td>
+                <td>' . $this->translateEventType($event['type']) . '</td>
+                <td>' . (isset($event['duration']) ? 
+                    $this->formatTime($event['duration']) : '-') . '</td>
+            </tr>';
+        }
+        
+        $html .= '</tbody>
+    </table>
+</body>
+</html>';
+        
+        file_put_contents($filename, $html);
+        return $filename;
+    }
+    
+    /**
+     * Traduit le type d'événement
+     */
+    private function translateEventType($type) {
+        $translations = [
+            'person_detected' => 'Personne détectée',
+            'person_left' => 'Personne partie',
+            'prolonged_occupation' => 'Occupation prolongée',
+            'sensor_error' => 'Erreur capteur',
+            'system_reset' => 'Réinitialisation système',
+            'calibration' => 'Calibration'
+        ];
+        
+        return $translations[$type] ?? $type;
+    }
+    
+    /**
+     * Formate le temps
+     */
+    private function formatTime($seconds) {
+        if ($seconds < 60) {
+            return $seconds . ' s';
+        } elseif ($seconds < 3600) {
+            return floor($seconds / 60) . ' min ' . ($seconds % 60) . ' s';
+        } else {
+            $hours = floor($seconds / 3600);
+            $minutes = floor(($seconds % 3600) / 60);
+            return $hours . ' h ' . $minutes . ' min';
+        }
+    }
+}
