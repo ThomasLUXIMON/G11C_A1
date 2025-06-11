@@ -5,9 +5,9 @@
  */
 
 // Configuration pour AlwaysData
-define('DB_HOST', 'mysql-appg1d_groupec.alwaysdata.net');
-define('DB_NAME', '[votre-compte]_manege');
-define('DB_USER', 'appg1d_groupec');
+define('DB_HOST', ' mysql-appg1d.alwaysdata.net');
+define('DB_NAME', 'appg1d_projetcommun');
+define('DB_USER', 'appg1d_groupec@2a00:b6e0:1:210:1::1');
 define('DB_PASS', 'Dev$G11C');
 define('DB_PORT', 3306);
 define('DB_CHARSET', 'utf8mb4');
