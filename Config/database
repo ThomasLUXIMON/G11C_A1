@@ -12,12 +12,65 @@ define('DB_PASS', 'Dev$G11C');
 define('DB_PORT', 3306);
 define('DB_CHARSET', 'utf8mb4');
 
-// Configuration locale pour tests
-if ($_SERVER['SERVER_NAME'] === 'localhost') {
-    define('DB_HOST_LOCAL', 'localhost');
-    define('DB_NAME_LOCAL', 'manege_securite');
-    define('DB_USER_LOCAL', 'root');
-    define('DB_PASS_LOCAL', '');
+define('DB_HOST', 'mysql-appg1d_groupec.alwaysdata.net');
+define('DB_NAME', 'appg1d_groupec_manege'); // Corrigé avec le bon format
+define('DB_USER', 'appg1d_groupec');
+define('DB_PASS', 'Dev$G11C');
+define('DB_PORT', 3306);
+define('DB_CHARSET', 'utf8mb4');
+
+// Configuration série pour TIVA C
+define('SERIAL_PORT', '/dev/ttyACM0'); // Linux
+// define('SERIAL_PORT', 'COM3'); // Windows
+define('BAUD_RATE', 115200);
+
+// Configuration des fichiers
+define('DATA_FILE', __DIR__ . '/data/seat_data.json');
+define('LOG_FILE', __DIR__ . '/logs/seat_log.txt');
+
+// Configuration API
+define('API_KEY', ''); // Laisser vide pour désactiver l'authentification
+
+// Configuration du système
+define('SEUIL_DETECTION', 25.0); // Distance en cm pour détecter une personne
+define('TEMPS_ALERTE_OCCUPATION', 30); // Secondes avant alerte
+define('INTERVAL_VERIFICATION', 5); // Secondes entre vérifications
+
+// Mode debug
+define('DEBUG_MODE', false);
+
+// Timezone
+date_default_timezone_set('Europe/Paris');
+
+// Autoloader simple
+spl_autoload_register(function ($class) {
+    $paths = [
+        __DIR__ . '/models/',
+        __DIR__ . '/controllers/',
+        __DIR__ . '/lib/'
+    ];
+    
+    foreach ($paths as $path) {
+        $file = $path . $class . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+    }
+});
+
+// Gestion des erreurs
+if (DEBUG_MODE) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+}
+
+// Fonction helper pour la base de données
+function db() {
+    return Database::getInstance()->getConnection();
 }
 
 /**
