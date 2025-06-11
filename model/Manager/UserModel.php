@@ -1,6 +1,6 @@
 <?php
 
-require_once 'User.php'; // Inclure la classe User
+require_once '../Entity/User.php'; // Inclure la classe User
 
 class UserModel {
     private $pdo;
