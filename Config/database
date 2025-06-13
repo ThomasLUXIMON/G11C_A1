@@ -7,17 +7,11 @@
 // Configuration pour AlwaysData
 define('DB_HOST', ' mysql-appg1d.alwaysdata.net');
 define('DB_NAME', 'appg1d_projetcommun');
-define('DB_USER', 'appg1d_groupec@2a00:b6e0:1:210:1::1');
-define('DB_PASS', 'Dev$G11C');
-define('DB_PORT', 3306);
-define('DB_CHARSET', 'utf8mb4');
-
-define('DB_HOST', 'mysql-appg1d_groupec.alwaysdata.net');
-define('DB_NAME', 'appg1d_groupec_manege'); // Corrigé avec le bon format
 define('DB_USER', 'appg1d_groupec');
 define('DB_PASS', 'Dev$G11C');
 define('DB_PORT', 3306);
 define('DB_CHARSET', 'utf8mb4');
+
 
 // Configuration série pour TIVA C
 define('SERIAL_PORT', '/dev/ttyACM0'); // Linux
@@ -29,9 +23,9 @@ define('DATA_FILE', __DIR__ . '/data/seat_data.json');
 define('LOG_FILE', __DIR__ . '/logs/seat_log.txt');
 
 // Configuration API
-define('API_KEY', ''); // Laisser vide pour désactiver l'authentification
+define('API_KEY', '');
 
-// Configuration du système
+// Configuration système
 define('SEUIL_DETECTION', 25.0); // Distance en cm pour détecter une personne
 define('TEMPS_ALERTE_OCCUPATION', 30); // Secondes avant alerte
 define('INTERVAL_VERIFICATION', 5); // Secondes entre vérifications
