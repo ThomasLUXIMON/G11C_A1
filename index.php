@@ -15,13 +15,13 @@
  * │   ├── BaseModel.php
  * │   └── View.php
  * ├── app/
- * │   ├── Controllers/
- * │   │   ├── AuthController.php
- * │   │   ├── DashboardController.php
- * │   │   ├── ManageController.php
- * │   │   ├── SessionController.php
- * │   │   ├── SecurityController.php
- * │   │   └── TivaController.php
+ * │   ├── Controlleur/
+ * │   │   ├── AuthControlleur.php
+ * │   │   ├── DashboardControlleur.php
+ * │   │   ├── ManageControlleur.php
+ * │   │   ├── SessionControlleur.php
+ * │   │   ├── SecurityControlleur.php
+ * │   │   └── TivaControlleur.php
  * │   ├── Model/
  * │   │   ├──Entity/
  * │   │   │   ├── User.php
