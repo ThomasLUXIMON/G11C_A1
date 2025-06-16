@@ -42,7 +42,6 @@ class UserModel {
             'prenom' => $user->getPrenom(),
             'email' => $user->getEmail(),
             'mot_de_passe' => $user->getMotDePasse(),
-            'type' => $user->getType(),
             'tel' => $user->getTel()
         ]);
     }
@@ -55,10 +54,9 @@ class UserModel {
             $data['prenom'],
             $data['email'],
             $data['mot_de_passe'],
-            $data['type'],
             $data['tel'],
-            $data['reset_token_hash'] ?? null,
-            $data['reset_token_expires_at'] ?? null
+            $data['reset_token_hash'],
+            $data['reset_token_expires_at'] ?? null,
         );
     }
 }

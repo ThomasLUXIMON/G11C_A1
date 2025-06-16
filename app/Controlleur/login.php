@@ -5,7 +5,7 @@
  */
 
 session_start();
-require_once 'config/database.php';
+require_once '../../Config/database.php';
 
 header('Content-Type: application/json');
 
@@ -34,7 +34,7 @@ try {
     }
 
     // Connexion à la base de données
-    $db = Database::getInstance()->getConnection();
+    $db = database::getInstance()->getConnection();
 
     // Rechercher l'utilisateur par email
     // D'abord essayer dans la table operateurs
