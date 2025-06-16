@@ -351,8 +351,3 @@ class DatabaseSchema {
         return true;
     }
 }
-
-// Fonction helper pour obtenir la connexion
-function db() {
-    return Database::getInstance()->getConnection();
-}
