@@ -5,11 +5,11 @@
  * Structure des dossiers:
  * /
  * ├── index.php (point d'entrée)
- * ├── config/
+ * ├── Config/
  * │   ├── database.php
  * │   ├── routes.php
  * │   └── app.php
- * ├── core/
+ * ├── Core/
  * │   ├── Router.php
  * │   ├── BaseController.php
  * │   ├── BaseModel.php
@@ -22,20 +22,17 @@
  * │   │   ├── SessionController.php
  * │   │   ├── SecurityController.php
  * │   │   └── TivaController.php
- * │   ├── Models/
- * │   │   ├── User.php
- * │   │   ├── Operateur.php
- * │   │   ├── Manege.php
- * │   │   ├── SessionManege.php
- * │   │   ├── ControleSecurite.php
- * │   │   ├── Alerte.php
- * │   │   └── TivaSerial.php
+ * │   ├── Model/
+ * │   │   ├──Entity/
+ * │   │   │   ├── User.php
+ * │   │   │   ├── Operateur.php
+ * │   │   │   ├── Manege.php
+ * │   │   │   ├──
+ * │   │   └──Manager/
+ *     |       ├──User
  * │   └── Views/
- * │       ├── layouts/
- * │       ├── auth/
- * │       ├── dashboard/
- * │       ├── manage/
- * │       └── security/
+ * │       ├── login.html
+ * │       ├── dashboard.html
  * └── public/
  *     ├── css/
  *     ├── js/
