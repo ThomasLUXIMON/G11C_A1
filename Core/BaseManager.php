@@ -1,5 +1,5 @@
 <?php
-abstract class BaseModel {
+abstract class BaseManager {
     protected PDO $db;
     protected string $table;
     protected string $primaryKey = 'id';

@@ -12,7 +12,7 @@
  * ├── Core/
  * │   ├── Router.php
  * │   ├── BaseController.php
- * │   ├── BaseModel.php
+ * │   ├── BaseManager.php
  * │   └── View.php
  * ├── app/
  * │   ├── Controlleur/
@@ -27,10 +27,11 @@
  * │   │   │   ├── User.php
  * │   │   │   ├── Capteur.php
  * │   │   └──Manager/
- *     |       ├──UserManager.php
+ *     |       ├── UserManager.php
  * │   └── Views/
  * │       ├── login.html
  * │       ├── dashboard.html
+ * |       └── 
  * └── public/
  *     ├── css/
  *     ├── js/
@@ -54,7 +55,7 @@ define('PUBLIC_PATH', ROOT_PATH . '/public');
 spl_autoload_register(function ($class) {
     $paths = [
         CORE_PATH . '/',
-        APP_PATH . '/Controllers/',
+        APP_PATH . '/Controlleur/',
         APP_PATH . '/Models/',
         CONFIG_PATH . '/'
     ];
@@ -74,6 +75,10 @@ spl_autoload_register(function ($class) {
 // Charger la configuration
 require_once CONFIG_PATH . '/app.php';
 require_once CONFIG_PATH . '/database.php';
+require_once CORE_PATH . '/BaseController.php';
+require_once CORE_PATH . '/BaseModel.php';
+require_once CORE_PATH . '/View.php';
+require_once CORE_PATH . '/Router.php';
 
 // Gestion des erreurs
 set_error_handler(function($severity, $message, $file, $line) {
