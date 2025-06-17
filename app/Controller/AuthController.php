@@ -12,6 +12,12 @@ class AuthController extends BaseController {
     
     public function login(): void {
         try {
+            // Vérifier si c'est bien une requête POST
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                $this->json(['success' => false, 'message' => 'Méthode non autorisée'], 405);
+                return;
+            }
+
             $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
             $password = $_POST['password'] ?? '';
             $remember = isset($_POST['remember']);
@@ -27,16 +33,55 @@ class AuthController extends BaseController {
                 return;
             }
 
-            $userManager = new UserManager($this->db);
-            $user = $userManager->findByEmail($email);
+            // Rechercher l'utilisateur dans operateurs d'abord
+            $stmt = $this->db->prepare("
+                SELECT id, nom, prenom, email, mot_de_passe, role, actif 
+                FROM operateurs 
+                WHERE email = :email AND actif = 1
+            ");
+            $stmt->execute(['email' => $email]);
+            $userData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$user || !password_verify($password, $user->getMotDePasse())) {
+            $userType = 'operateur';
+            
+            // Si pas trouvé dans operateurs, chercher dans Utilisateurs
+            if (!$userData) {
+                $stmt = $this->db->prepare("
+                    SELECT id, nom, prenom, email, mot_de_passe, type, tel
+                    FROM Utilisateurs 
+                    WHERE email = :email
+                ");
+                $stmt->execute(['email' => $email]);
+                $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+                $userType = 'utilisateur';
+            }
+
+            if (!$userData || !password_verify($password, $userData['mot_de_passe'])) {
                 $this->json(['success' => false, 'message' => 'Identifiants incorrects'], 401);
                 return;
             }
 
+            // Créer un objet User unifié
+            $user = new User(
+                $userData['id'],
+                $userData['nom'],
+                $userData['prenom'] ?? '',
+                $userData['email'],
+                $userData['mot_de_passe'],
+                $userData['tel'] ?? null,
+                $userData['role'] ?? $userData['type'] ?? 'utilisateur',
+                null,
+                null
+            );
+
             // Créer la session
             $this->setUserSession($user);
+
+            // Mettre à jour la dernière connexion pour les opérateurs
+            if ($userType === 'operateur') {
+                $updateStmt = $this->db->prepare("UPDATE operateurs SET derniere_connexion = NOW() WHERE id = :id");
+                $updateStmt->execute(['id' => $user->getId()]);
+            }
 
             // Gestion "Se souvenir de moi"
             if ($remember) {
@@ -79,7 +124,17 @@ class AuthController extends BaseController {
         $token = bin2hex(random_bytes(32));
         $expires = time() + REMEMBER_TOKEN_LIFETIME;
         
-        // Stocker en base (vous devrez créer cette table)
+        // Créer la table si elle n'existe pas
+        $this->db->exec("
+            CREATE TABLE IF NOT EXISTS remember_tokens (
+                user_id INT PRIMARY KEY,
+                token VARCHAR(255),
+                expires_at DATETIME,
+                FOREIGN KEY (user_id) REFERENCES Utilisateurs(id) ON DELETE CASCADE
+            )
+        ");
+        
+        // Stocker en base
         $stmt = $this->db->prepare("
             INSERT INTO remember_tokens (user_id, token, expires_at) 
             VALUES (:user_id, :token, FROM_UNIXTIME(:expires))
@@ -99,11 +154,11 @@ class AuthController extends BaseController {
     private function getRedirectByRole(string $role): string {
         switch ($role) {
             case 'admin':
-                return '/admin/dashboard';
+                return '/dashboard';
             case 'superviseur':
-                return '/supervisor/dashboard';
+                return '/dashboard';
             case 'operateur':
-                return '/operator/dashboard';
+                return '/dashboard';
             default:
                 return '/dashboard';
         }
