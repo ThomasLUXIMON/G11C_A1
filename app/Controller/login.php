@@ -6,6 +6,8 @@
 
 session_start();
 
+require_once __DIR__ . '/../../Config/database.php';
+
 header('Content-Type: application/json');
 
 // Vérifier si c'est une requête POST
