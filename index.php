@@ -104,6 +104,12 @@ set_error_handler(function($severity, $message, $file, $line) {
     }
 });
 
+// Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
+if (!isset($_SESSION['user_id'])) {
+    header('Location: app/Views/login.html');
+    exit;
+}
+
 try {
     // Créer les tables si nécessaire (première installation)
     if (defined('DEBUG_MODE') && DEBUG_MODE) {
