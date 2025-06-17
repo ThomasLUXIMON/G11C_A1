@@ -9,5 +9,12 @@ Class Capteur {
 // Getters
     public function getId_Capteur(): ?int { return $this->id_capteur; }
     public function getId_Manege(): ?int { return $this->id_manege; }
-    public function getAll(): ?array {return $this->array=[$segment_7, $temperature, $lumiere_photo ];}
+    public function getAll(): ?array { return [
+            'id_capteur' => $this->id_capteur,
+            'id_manege' => $this->id_manege,
+            'temperature' => $this->temperature,
+            'segment_7' => $this->segment_7,
+            'lumiere_photo' => $this->lumiere_photo
+        ];
+    }
 }

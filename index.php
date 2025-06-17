@@ -25,7 +25,6 @@
  * │   ├── Model/
  * │   │   ├──Entity/
  * │   │   │   ├── User.php
- * │   │   │   ├── Operateur.php
  * │   │   │   ├── Manege.php
  * │   │   │   ├──
  * │   │   └──Manager/
