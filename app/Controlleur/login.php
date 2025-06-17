@@ -5,7 +5,7 @@
  */
 
 session_start();
-require_once '../../Config/database.php';
+require_once '/database/';
 
 header('Content-Type: application/json');
 

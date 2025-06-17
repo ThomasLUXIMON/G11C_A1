@@ -18,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Configuration
-require_once 'config.php';
-require_once 'TivaSerial.php';
+require_once '/config/';
+require_once '/TivaSerial/';
 
 // Vérification de la clé API (optionnel)
 if (defined('API_KEY') && API_KEY !== '') {
