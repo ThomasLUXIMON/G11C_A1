@@ -1,7 +1,5 @@
 <?php
 
-require_once '/User/'; // Inclure la classe User
-
 class UserManager {
     private PDO $pdo;
 

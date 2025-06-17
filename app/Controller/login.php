@@ -5,7 +5,6 @@
  */
 
 session_start();
-require_once '/database/';
 
 header('Content-Type: application/json');
 

@@ -7,8 +7,7 @@
 class Capteur_temperature extends Capteur {
     
     // Propriétés spécifiques aux capteurs de température
-    private ?float $temperatureMin;
-    private ?float $temperatureMax;
+    private ?float $temperature;
     private ?string $unite = '°C';
     private ?DateTime $derniereMesure;
     private ?string $etat = 'inactif'; // True = actif, False = inactif à modif
@@ -19,21 +18,17 @@ class Capteur_temperature extends Capteur {
     public function __construct(
         ?int $id_capteur = null,
         ?int $id_manege = null,
-        ?float $informations = null,
-        ?float $temperatureMin = -10.0,
-        ?float $temperatureMax = 60.0,
+        ?string $informations = "Capteur de temperature:",
+        ?float $temperature = null,
         ?string $unite = '°C',
         ?DateTime $derniereMesure = null,
         ?string $etat = 'actif'
     ) {
-        // Appel du constructeur parent
+        // Initialisation des propriétés
         $this->id_capteur = $id_capteur;
         $this->id_manege = $id_manege;
         $this->informations = $informations;
-        
-        // Initialisation des propriétés spécifiques
-        $this->temperatureMin = $temperatureMin;
-        $this->temperatureMax = $temperatureMax;
+        $this->temperature = $temperature;
         $this->unite = $unite;
         $this->derniereMesure = $derniereMesure ?? new DateTime();
         $this->etat = $etat;
@@ -41,12 +36,8 @@ class Capteur_temperature extends Capteur {
     
     // ===== GETTERS SPÉCIFIQUES =====
     
-    public function getTemperatureMin(): ?float {
-        return $this->temperatureMin;
-    }
-    
-    public function getTemperatureMax(): ?float {
-        return $this->temperatureMax;
+    public function gettemperature(): ?float {
+        return $this->temperature;
     }
     
     public function getUnite(): ?string {
@@ -63,12 +54,8 @@ class Capteur_temperature extends Capteur {
     
     // ===== SETTERS SPÉCIFIQUES =====
     
-    public function setTemperatureMin(?float $temperatureMin): void {
-        $this->temperatureMin = $temperatureMin;
-    }
-    
-    public function setTemperatureMax(?float $temperatureMax): void {
-        $this->temperatureMax = $temperatureMax;
+    public function settemperature(?float $temperature): void {
+        $this->temperature = $temperature;
     }
     
     public function setUnite(?string $unite): void {
@@ -89,42 +76,20 @@ class Capteur_temperature extends Capteur {
      * Met à jour la température mesurée par le capteur
      */
     public function mettreAJourTemperature(float $nouvelleTemperature): void {
-        $this->informations = $nouvelleTemperature;
+        $this->temperature = $nouvelleTemperature;
         $this->derniereMesure = new DateTime();
-        
         // Vérifier si la température est dans les limites acceptables
-        $this->verifierLimites();
-    }
-    
-    /**
-     * Vérifie si la température est dans les limites acceptables
-     */
-    public function verifierLimites(): bool {
-        if ($this->informations === null) {
-            return false;
-        }
-        
-        $temperatureOk = ($this->informations >= $this->temperatureMin && 
-                         $this->informations <= $this->temperatureMax);
-        
-        if (!$temperatureOk) {
-            $this->etat = 'alerte';
-        } else if ($this->etat === 'alerte') {
-            $this->etat = 'actif';
-        }
-        
-        return $temperatureOk;
+        // (ajoutez ici une logique si besoin)
     }
     
     /**
      * Retourne la température formatée avec son unité
      */
     public function getTemperatureFormatee(): string {
-        if ($this->informations === null) {
+        if ($this->temperature === null) {
             return 'N/A';
         }
-        
-        return number_format($this->informations, 1) . ' ' . $this->unite;
+        return number_format($this->temperature, 1) . ' ' . $this->unite;
     }
     
     /**
@@ -142,11 +107,8 @@ class Capteur_temperature extends Capteur {
             'id_capteur' => $this->id_capteur,
             'id_manege' => $this->id_manege,
             'temperature_actuelle' => $this->getTemperatureFormatee(),
-            'temperature_min_autorisee' => $this->temperatureMin . ' ' . $this->unite,
-            'temperature_max_autorisee' => $this->temperatureMax . ' ' . $this->unite,
             'etat' => $this->etat,
             'derniere_mesure' => $this->derniereMesure ? $this->derniereMesure->format('Y-m-d H:i:s') : null,
-            'limites_respectees' => $this->verifierLimites(),
             'fonctionnel' => $this->estFonctionnel()
         ];
     }
@@ -159,8 +121,7 @@ class Capteur_temperature extends Capteur {
             'id_capteur' => $this->id_capteur,
             'id_manege' => $this->id_manege,
             'informations' => $this->informations,
-            'temperature_min' => $this->temperatureMin,
-            'temperature_max' => $this->temperatureMax,
+            'temperature' => $this->temperature,
             'unite' => $this->unite,
             'derniere_mesure' => $this->derniereMesure ? $this->derniereMesure->format('Y-m-d H:i:s') : null,
             'etat' => $this->etat
@@ -175,13 +136,11 @@ class Capteur_temperature extends Capteur {
         if (isset($data['derniere_mesure']) && $data['derniere_mesure']) {
             $derniereMesure = new DateTime($data['derniere_mesure']);
         }
-        
         return new self(
             $data['id_capteur'] ?? null,
             $data['id_manege'] ?? null,
             $data['informations'] ?? null,
-            $data['temperature_min'] ?? -10.0,
-            $data['temperature_max'] ?? 60.0,
+            $data['temperature'] ?? null,
             $data['unite'] ?? '°C',
             $derniereMesure,
             $data['etat'] ?? 'actif'
