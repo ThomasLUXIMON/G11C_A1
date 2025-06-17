@@ -1,9 +1,11 @@
-<?php
+<?php 
 abstract class BaseController {
     protected View $view;
+    protected PDO $db;
     
     public function __construct() {
         $this->view = new View();
+        $this->db = Database::getInstance()->getConnection();
     }
 
     protected function render(string $view, array $data = []): void {
@@ -36,9 +38,14 @@ abstract class BaseController {
 
     protected function requireRole(string $requiredRole): void {
         $user = $this->requireAuth();
-        $roleHierarchy = ['User' => 1, 'superviseur' => 2, 'admin' => 3];
+        if (!$user) {
+            $this->redirect('/login');
+            return;
+        }
         
-        $userLevel = $roleHierarchy[$user->role] ?? 0;
+        $roleHierarchy = ['utilisateur' => 1, 'operateur' => 2, 'superviseur' => 3, 'admin' => 4];
+        
+        $userLevel = $roleHierarchy[$user->getType()] ?? 0;
         $requiredLevel = $roleHierarchy[$requiredRole] ?? 999;
         
         if ($userLevel < $requiredLevel) {
@@ -56,16 +63,16 @@ abstract class BaseController {
             return null;
         }
 
-        $UserModel = new UserManager();
-        return $UserModel->findById($_SESSION['user_id']);
+        $userManager = new UserManager($this->db);
+        return $userManager->findById($_SESSION['user_id']);
     }
 
-    protected function setUserSession(User $User): void {
+    protected function setUserSession(User $user): void {
         $_SESSION['logged_in'] = true;
-        $_SESSION['user_id'] = $User->id;
-        $_SESSION['user_email'] = $User->email;
-        $_SESSION['user_name'] = $User->getFullName();
-        $_SESSION['user_role'] = $User->role;
+        $_SESSION['user_id'] = $user->getId();
+        $_SESSION['user_email'] = $user->getEmail();
+        $_SESSION['user_name'] = trim($user->getPrenom() . ' ' . $user->getNom());
+        $_SESSION['user_role'] = $user->getType();
         $_SESSION['login_time'] = time();
     }
 

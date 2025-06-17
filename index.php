@@ -25,8 +25,7 @@
  * │   ├── Model/
  * │   │   ├──Entity/
  * │   │   │   ├── User.php
- * │   │   │   ├── Manege.php
- * │   │   │   ├──
+ * │   │   │   ├── Capteur.php
  * │   │   └──Manager/
  *     |       ├──UserManager.php
  * │   └── Views/
