@@ -1,14 +1,14 @@
 <?php
 class User {
-    private ?int $id;
-    private ?string $email;
-    private ?string $mot_de_passe;
-    private ?string $nom;
-    private ?string $prenom;
-    private ?DateTime $reset_token_expires_at;
-    private ?string $reset_token_hash;
-    private ?string $type; // ajout 
-    private ?int $tel;
+    public ?int $id;
+    public ?string $email;
+    public ?string $mot_de_passe;
+    public ?string $nom;
+    public ?string $prenom;
+    public ?DateTime $reset_token_expires_at;
+    public ?string $reset_token_hash;
+    public ?string $type; // ajout
+    public ?int $tel; 
     const TABLE_NAME = 'Utilisateur';
 
    public function __construct(

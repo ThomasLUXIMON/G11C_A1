@@ -22,7 +22,7 @@ abstract class BaseController {
         exit;
     }
 
-    protected function requireAuth(): ?Operateur {
+    protected function requireAuth(): ?User {
         if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
             if ($this->isApiRequest()) {
                 $this->json(['error' => 'Unauthorized'], 401);
@@ -36,7 +36,7 @@ abstract class BaseController {
 
     protected function requireRole(string $requiredRole): void {
         $user = $this->requireAuth();
-        $roleHierarchy = ['operateur' => 1, 'superviseur' => 2, 'admin' => 3];
+        $roleHierarchy = ['User' => 1, 'superviseur' => 2, 'admin' => 3];
         
         $userLevel = $roleHierarchy[$user->role] ?? 0;
         $requiredLevel = $roleHierarchy[$requiredRole] ?? 999;
@@ -51,21 +51,21 @@ abstract class BaseController {
         }
     }
 
-    protected function getCurrentUser(): ?Operateur {
+    protected function getCurrentUser(): ?User {
         if (!isset($_SESSION['user_id'])) {
             return null;
         }
 
-        $operateurModel = new Operateur();
-        return $operateurModel->find($_SESSION['user_id']);
+        $UserModel = new UserManager();
+        return $UserModel->findById($_SESSION['user_id']);
     }
 
-    protected function setUserSession(Operateur $operateur): void {
+    protected function setUserSession(User $User): void {
         $_SESSION['logged_in'] = true;
-        $_SESSION['user_id'] = $operateur->id;
-        $_SESSION['user_email'] = $operateur->email;
-        $_SESSION['user_name'] = $operateur->getFullName();
-        $_SESSION['user_role'] = $operateur->role;
+        $_SESSION['user_id'] = $User->id;
+        $_SESSION['user_email'] = $User->email;
+        $_SESSION['user_name'] = $User->getFullName();
+        $_SESSION['user_role'] = $User->role;
         $_SESSION['login_time'] = time();
     }
 
