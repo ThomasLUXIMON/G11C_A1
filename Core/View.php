@@ -11,13 +11,12 @@ class View {
         $this->data = array_merge($this->data, $data);
         extract($this->data);
 
-        $viewFile = $this->viewsPath . '/' . str_replace('.', '/', $view) . '.php';
+        $viewFile = $this->getViewPath($view);
 
         if (!file_exists($viewFile)) {
             throw new Exception("View file not found: {$viewFile}");
         }
 
-        // Inclure le layout si ce n'est pas une vue partielle
         if (strpos($view, 'layouts/') !== 0 && strpos($view, 'partials/') !== 0) {
             include $this->viewsPath . '/layouts/app.php';
         } else {
@@ -30,6 +29,10 @@ class View {
     }
 
     public function getViewPath(string $view): string {
-        return $this->viewsPath . '/' . str_replace('.', '/', $view) . '.php';
+        $basePath = $this->viewsPath . '/' . str_replace('.', '/', $view);
+        if (file_exists($basePath . '.html')) {
+            return $basePath . '.html';
+        }
+        return $basePath . '.php';
     }
 }

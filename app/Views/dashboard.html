@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tableau de Bord - Système de Gestion de Manège</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <style>
+    body {
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
+      font-family: 'Nunito', sans-serif;
+      color: #2d3748;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: linear-gradient(to right, #2a69ac, #4dabf7);
+      padding: 8px;
+      justify-content: center;
+      border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    }
+    .navbar-brand {
+      color: white !important;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .nav-link {
+      color: white !important;
+    }
+    .container {
+      padding: 20px;
+    }
+    .title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2a69ac;
+      margin-bottom: 30px;
+    }
+    .card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+    .card h5 {
+      color: #2a69ac;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <a class="navbar-brand" href="/dashboard"><i class="fas fa-ferris-wheel"></i> Système de Gestion de Manège</a>
+    <div class="ms-auto">
+      <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="title">Tableau de Bord - Tous les manèges</h1>
+
+    <div class="row" id="all-manege-details">
+      <!-- Cartes des manèges seront injectées ici -->
+    </div>
+
+    <h2 class="mt-5 mb-3" style="color:#2a69ac;">Nombre de passagers et Température par manège</h2>
+    <canvas id="passengersChart" style="max-width: 700px;"></canvas>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const maneges = [
+      { id: 1, nom: "Grand 8" },
+      { id: 2, nom: "Tonneaux Volants" },
+      { id: 3, nom: "Train Fantôme" },
+      { id: 4, nom: "Chaises Volantes" }
+    ];
+
+    // Ajout de la température (°C) pour chaque manège
+    const manegesDetails = {
+      1: { actif: true, nb_passagers: 15, temperature: 25.6 },
+      2: { actif: false, nb_passagers: 0, temperature: 22.3 },
+      3: { actif: true, nb_passagers: 6, temperature: 24.1 },
+      4: { actif: true, nb_passagers: 12, temperature: 26.0 }
+    };
+
+    function afficherTousLesManeges() {
+      const container = $('#all-manege-details');
+      container.empty();
+
+      maneges.forEach(manege => {
+        const info = manegesDetails[manege.id];
+        const statut = info.actif ? 'Actif ✅' : 'Inactif ❌';
+
+        const cardHtml = `
+          <div class="col-md-6 col-lg-4">
+            <div class="card">
+              <h5>${manege.nom}</h5>
+              <p><strong>Statut :</strong> ${statut}</p>
+              <p><strong>Nombre de passagers :</strong> ${info.nb_passagers}</p>
+              <p><strong>Température :</strong> ${info.temperature.toFixed(1)} °C</p>
+            </div>
+          </div>
+        `;
+        container.append(cardHtml);
+      });
+    }
+
+    function afficherGraphique() {
+      const labels = maneges.map(m => m.nom);
+      const nbPassagers = maneges.map(m => manegesDetails[m.id].nb_passagers);
+      const temperatures = maneges.map(m => manegesDetails[m.id].temperature);
+
+      const ctx = document.getElementById('passengersChart').getContext('2d');
+      new Chart(ctx, {
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'bar',
+              label: 'Nombre de passagers',
+              data: nbPassagers,
+              backgroundColor: 'rgba(42, 105, 172, 0.7)',
+              borderColor: 'rgba(42, 105, 172, 1)',
+              borderWidth: 1,
+              borderRadius: 5,
+              yAxisID: 'y',
+            },
+            {
+              type: 'line',
+              label: 'Température (°C)',
+              data: temperatures,
+              borderColor: '#f97316',
+              backgroundColor: '#f9731666',
+              yAxisID: 'y1',
+              tension: 0.3,
+              fill: true,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Nombre de passagers'
+              },
+              ticks: { stepSize: 1 }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Température (°C)'
+              },
+              grid: {
+                drawOnChartArea: false
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              enabled: true,
+              mode: 'nearest',
+              intersect: false,
+            }
+          }
+        }
+      });
+    }
+
+    $(document).ready(() => {
+      afficherTousLesManeges();
+      afficherGraphique();
+    });
+  </script>
+</body>
+</html>
