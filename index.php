@@ -15,19 +15,22 @@
  * │   ├── BaseManager.php
  * │   └── View.php
  * ├── app/
- * │   ├── Controlleur/
- * │   │   ├── AuthControlleur.php
- * │   │   ├── DashboardControlleur.php
- * │   │   ├── ManageControlleur.php
- * │   │   ├── SessionControlleur.php
- * │   │   ├── SecurityControlleur.php
- * │   │   └── TivaControlleur.php
+ * │   ├── Controller/
+ * │   │   ├── AuthController.php
+ * │   │   ├── DashboardController.php
+ * │   │   ├── ManageController.php
+ * │   │   ├── SessionController.php
+ * │   │   ├── SecurityController.php
+ * │   │   └── TivaController.php
  * │   ├── Model/
  * │   │   ├──Entity/
  * │   │   │   ├── User.php
  * │   │   │   ├── Capteur.php
+ * |   |   |   ├── Manege.php
+ * |   |   |   └── Capteur_temperature.php
  * │   │   └──Manager/
- *     |       ├── UserManager.php
+ * |   |      ├── UserManager.php
+ * |   |      └── ManegeManager.php
  * │   └── Views/
  * │       ├── login.html
  * │       ├── dashboard.html
@@ -42,6 +45,12 @@
 // INDEX.PHP - Point d'entrée principal
 // ==========================================
 
+
+/**
+ * index.php - Point d'entrée principal
+ * Système de Gestion de Manège
+ */
+
 session_start();
 
 // Configuration des chemins
@@ -55,13 +64,11 @@ define('PUBLIC_PATH', ROOT_PATH . '/public');
 spl_autoload_register(function ($class) {
     $paths = [
         CORE_PATH . '/',
-        APP_PATH . '/Controlleur/',
-        APP_PATH . '/Models/',
+        APP_PATH . '/Controller/',
+        APP_PATH . '/Models/Entity/',
+        APP_PATH . '/Models/Manager/',
         CONFIG_PATH . '/'
     ];
-    
-    // Nettoyer le nom de la classe
-    $class = str_replace(['App\\Controllers\\', 'App\\Models\\', 'Core\\'], '', $class);
     
     foreach ($paths as $path) {
         $file = $path . $class . '.php';
@@ -75,10 +82,17 @@ spl_autoload_register(function ($class) {
 // Charger la configuration
 require_once CONFIG_PATH . '/app.php';
 require_once CONFIG_PATH . '/database.php';
+
+// Charger les classes core
 require_once CORE_PATH . '/BaseController.php';
-require_once CORE_PATH . '/BaseModel.php';
+require_once CORE_PATH . '/BaseManager.php';
 require_once CORE_PATH . '/View.php';
 require_once CORE_PATH . '/Router.php';
+
+// Charger TivaSerial si nécessaire
+if (file_exists(ROOT_PATH . '/TivaSerial.php')) {
+    require_once ROOT_PATH . '/TivaSerial.php';
+}
 
 // Gestion des erreurs
 set_error_handler(function($severity, $message, $file, $line) {
@@ -91,6 +105,11 @@ set_error_handler(function($severity, $message, $file, $line) {
 });
 
 try {
+    // Créer les tables si nécessaire (première installation)
+    if (defined('DEBUG_MODE') && DEBUG_MODE) {
+        DatabaseSchema::createTables();
+    }
+    
     $router = require CONFIG_PATH . '/routes.php';
     $router->dispatch();
 } catch (Exception $e) {
@@ -101,6 +120,6 @@ try {
         echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
     } else {
         http_response_code(500);
-        include APP_PATH . '/Views/errors/500.php';
+        echo "<h1>Erreur 500</h1><p>Une erreur s'est produite.</p>";
     }
 }
