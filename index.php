@@ -29,7 +29,7 @@
  * │   │   │   ├── Manege.php
  * │   │   │   ├──
  * │   │   └──Manager/
- *     |       ├──User
+ *     |       ├──UserManager.php
  * │   └── Views/
  * │       ├── login.html
  * │       ├── dashboard.html
