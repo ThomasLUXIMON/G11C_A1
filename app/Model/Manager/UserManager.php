@@ -1,15 +1,14 @@
 <?php
 
-require_once '../Entity/User.php'; // Inclure la classe User
+require_once '/User/'; // Inclure la classe User
 
 class UserManager {
-    private $pdo;
+    private PDO $pdo;
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
     }
 
-    // Récupérer tous les utilisateurs
     public function findAll(): array {
         $stmt = $this->pdo->query("SELECT * FROM Utilisateurs");
         $users = [];
@@ -21,7 +20,6 @@ class UserManager {
         return $users;
     }
 
-    // Récupérer un utilisateur par son ID
     public function findById(int $id): ?User {
         $stmt = $this->pdo->prepare("SELECT * FROM Utilisateurs WHERE id = :id");
         $stmt->execute(['id' => $id]);
@@ -30,7 +28,14 @@ class UserManager {
         return $data ? $this->mapToUser($data) : null;
     }
 
-    // Insérer un nouvel utilisateur
+    public function findByEmail(string $email): ?User {
+        $stmt = $this->pdo->prepare("SELECT * FROM Utilisateurs WHERE email = :email");
+        $stmt->execute(['email' => $email]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $data ? $this->mapToUser($data) : null;
+    }
+
     public function insert(User $user): bool {
         $stmt = $this->pdo->prepare("
             INSERT INTO Utilisateurs (nom, prenom, email, mot_de_passe, type, tel)
@@ -42,12 +47,36 @@ class UserManager {
             'prenom' => $user->getPrenom(),
             'email' => $user->getEmail(),
             'mot_de_passe' => $user->getMotDePasse(),
+            'type' => $user->getType(),
             'tel' => $user->getTel()
         ]);
     }
 
-    // Mapper un tableau associatif vers un objet User
+    public function update(User $user): bool {
+        $stmt = $this->pdo->prepare("
+            UPDATE Utilisateurs 
+            SET nom = :nom, prenom = :prenom, email = :email, 
+                mot_de_passe = :mot_de_passe, type = :type, tel = :tel
+            WHERE id = :id
+        ");
+
+        return $stmt->execute([
+            'id' => $user->getId(),
+            'nom' => $user->getNom(),
+            'prenom' => $user->getPrenom(),
+            'email' => $user->getEmail(),
+            'mot_de_passe' => $user->getMotDePasse(),
+            'type' => $user->getType(),
+            'tel' => $user->getTel()
+        ]);
+    }
+
     private function mapToUser(array $data): User {
+        $expiresAt = null;
+        if ($data['reset_token_expires_at']) {
+            $expiresAt = new DateTime($data['reset_token_expires_at']);
+        }
+
         return new User(
             $data['id'],
             $data['nom'],
@@ -55,8 +84,9 @@ class UserManager {
             $data['email'],
             $data['mot_de_passe'],
             $data['tel'],
+            $data['type'] ?? 'utilisateur',
             $data['reset_token_hash'],
-            $data['reset_token_expires_at'] ?? null,
+            $expiresAt
         );
     }
 }
