@@ -205,9 +205,9 @@ $router->get('/admin/config', 'AdminController', 'config');
 $router->post('/admin/config', 'AdminController', 'updateConfig');
 
 return $router;
-?>
 
-<?php
+
+
 // ==========================================
 // CORE/ROUTER.PHP - Routeur principal
 // ==========================================

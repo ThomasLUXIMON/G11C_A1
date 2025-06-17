@@ -7,7 +7,7 @@ class User {
     private ?string $prenom;
     private ?DateTime $reset_token_expires_at;
     private ?string $reset_token_hash;
-    private ?string $type;
+    private ?string $type; // ajout 
     private ?int $tel;
     const TABLE_NAME = 'Utilisateur';
 

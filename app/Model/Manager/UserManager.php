@@ -2,7 +2,7 @@
 
 require_once '../Entity/User.php'; // Inclure la classe User
 
-class UserModel {
+class UserManager {
     private $pdo;
 
     public function __construct(PDO $pdo) {

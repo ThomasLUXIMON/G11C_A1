@@ -34,7 +34,7 @@ try {
     }
 
     // Connexion à la base de données
-    $db = database::getInstance()->getConnection();
+    $db = Database::getInstance()->getConnection();
 
     // Rechercher l'utilisateur par email
     // D'abord essayer dans la table operateurs
