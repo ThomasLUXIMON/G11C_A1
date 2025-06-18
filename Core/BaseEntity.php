@@ -6,7 +6,7 @@
 
 require_once __DIR__ . '/../Config/database.php';
 
-abstract class Model {
+abstract class BaseEntity {
     protected $db;
     protected $table;
     protected $primaryKey = 'id';
@@ -210,48 +210,9 @@ abstract class Model {
 }
 
 /**
- * Modèle pour les manèges
- */
-class Manege extends Model {
-    protected $table = 'maneges';
-    protected $fillable = ['nom', 'type', 'capacite_max', 'duree_tour', 
-                          'age_minimum', 'taille_minimum', 'statut'];
-    
-    /**
-     * Récupère les sessions d'un manège
-     */
-    public function getSessions($manegeId, $limit = 10) {
-        $sql = "SELECT s.*, o.nom as operateur_nom, o.prenom as operateur_prenom
-                FROM sessions_manege s
-                JOIN operateurs o ON s.operateur_id = o.id
-                WHERE s.manege_id = ?
-                ORDER BY s.heure_debut DESC
-                LIMIT ?";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$manegeId, $limit]);
-        return $stmt->fetchAll();
-    }
-    
-    /**
-     * Vérifie si le manège est disponible
-     */
-    public function isAvailable($manegeId) {
-        $sql = "SELECT COUNT(*) as count FROM sessions_manege 
-                WHERE manege_id = ? AND statut IN ('preparation', 'en_cours')";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$manegeId]);
-        $result = $stmt->fetch();
-        
-        return $result['count'] == 0;
-    }
-}
-
-/**
  * Modèle pour les sessions de manège
  */
-class SessionManege extends Model {
+class SessionManege extends BaseEntity {
     protected $table = 'sessions_manege';
     protected $fillable = ['manege_id', 'operateur_id', 'heure_debut', 
                           'heure_fin', 'nombre_passagers', 'statut', 'commentaire'];
@@ -324,7 +285,7 @@ class SessionManege extends Model {
 /**
  * Modèle pour les contrôles de sécurité
  */
-class ControleSecurite extends Model {
+class ControleSecurite extends BaseEntity {
     protected $table = 'controles_securite';
     protected $fillable = ['session_id', 'type_controle', 'siege_numero', 
                           'etat_detection', 'distance_capteur', 'validation', 
@@ -372,7 +333,7 @@ class ControleSecurite extends Model {
 /**
  * Modèle pour les alertes
  */
-class Alerte extends Model {
+class Alerte extends BaseEntity {
     protected $table = 'alertes';
     protected $fillable = ['session_id', 'type_alerte', 'niveau', 'source', 
                           'message', 'donnees', 'acquittee', 'acquittee_par', 
