@@ -39,15 +39,9 @@ async function handleLogin() {
             credentials: 'same-origin'
         });
 
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            showAlert('Connexion réussie ! Redirection...', 'success');
-            
-            // Redirection après succès
-            setTimeout(() => {
-                window.location.href = result.redirect || 'dashboard.php';
-            }, 1500);
+        const result = await response.json();        if (response.ok && result.success) {
+            // Redirection immédiate après succès
+            window.location.href = result.redirect || '/G11C/G11C_A1/dashboard';
         } else {
             showAlert(result.message || 'Erreur de connexion. Vérifiez vos identifiants.', 'error');
         }

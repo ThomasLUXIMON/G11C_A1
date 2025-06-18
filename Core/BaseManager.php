@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../Config/database.php';
+
 abstract class BaseManager {
     protected PDO $db;
     protected string $table;

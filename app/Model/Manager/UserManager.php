@@ -1,14 +1,37 @@
 <?php
+require_once __DIR__ . '/../../../Core/BaseManager.php';
+require_once __DIR__ . '/../Entity/User.php';
 
-class UserManager {
-    private PDO $pdo;
-
-    public function __construct(PDO $pdo) {
-        $this->pdo = $pdo;
+class UserManager extends BaseManager {
+    protected string $table = 'Utilisateurs';
+    protected string $primaryKey = 'id';
+      public function __construct() {
+        parent::__construct();
     }
+    
+    public function findAll(array $conditions = [], string $orderBy = null, int $limit = null): array {
+        $sql = "SELECT * FROM {$this->table}";
+        $params = [];
 
-    public function findAll(): array {
-        $stmt = $this->pdo->query("SELECT * FROM Utilisateurs");
+        if (!empty($conditions)) {
+            $whereClause = [];
+            foreach ($conditions as $key => $value) {
+                $whereClause[] = "$key = ?";
+                $params[] = $value;
+            }
+            $sql .= " WHERE " . implode(" AND ", $whereClause);
+        }
+
+        if ($orderBy) {
+            $sql .= " ORDER BY $orderBy";
+        }
+
+        if ($limit) {
+            $sql .= " LIMIT $limit";
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         $users = [];
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -17,26 +40,25 @@ class UserManager {
 
         return $users;
     }
-
+    
     public function findById(int $id): ?User {
-        $stmt = $this->pdo->prepare("SELECT * FROM Utilisateurs WHERE id = :id");
+        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE {$this->primaryKey} = :id");
         $stmt->execute(['id' => $id]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $data ? $this->mapToUser($data) : null;
-    }
+        return $data ? $this->mapToUser($data) : null;    }
 
     public function findByEmail(string $email): ?User {
-        $stmt = $this->pdo->prepare("SELECT * FROM Utilisateurs WHERE email = :email");
+        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE email = :email");
         $stmt->execute(['email' => $email]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $data ? $this->mapToUser($data) : null;
     }
-
+    
     public function insert(User $user): bool {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO Utilisateurs (nom, prenom, email, mot_de_passe, type, tel)
+        $stmt = $this->db->prepare("
+            INSERT INTO {$this->table} (nom, prenom, email, mot_de_passe, type, tel)
             VALUES (:nom, :prenom, :email, :mot_de_passe, :type, :tel)
         ");
 
@@ -50,12 +72,12 @@ class UserManager {
         ]);
     }
 
-    public function update(User $user): bool {
-        $stmt = $this->pdo->prepare("
-            UPDATE Utilisateurs 
+    public function updateUser(User $user): bool {
+        $stmt = $this->db->prepare("
+            UPDATE {$this->table} 
             SET nom = :nom, prenom = :prenom, email = :email, 
                 mot_de_passe = :mot_de_passe, type = :type, tel = :tel
-            WHERE id = :id
+            WHERE {$this->primaryKey} = :id
         ");
 
         return $stmt->execute([
@@ -67,11 +89,9 @@ class UserManager {
             'type' => $user->getType(),
             'tel' => $user->getTel()
         ]);
-    }
-
-    public function setResetToken(User $user, string $token, \DateTime $expiresAt): bool {
-        $stmt = $this->pdo->prepare("
-            UPDATE Utilisateurs SET reset_token_hash = :hash, reset_token_expires_at = :expires WHERE id = :id
+    }    public function setResetToken(User $user, string $token, \DateTime $expiresAt): bool {
+        $stmt = $this->db->prepare("
+            UPDATE {$this->table} SET reset_token_hash = :hash, reset_token_expires_at = :expires WHERE {$this->primaryKey} = :id
         ");
         return $stmt->execute([
             'hash' => hash('sha256', $token),
@@ -81,8 +101,8 @@ class UserManager {
     }
 
     public function clearResetToken(User $user): bool {
-        $stmt = $this->pdo->prepare("
-            UPDATE Utilisateurs SET reset_token_hash = NULL, reset_token_expires_at = NULL WHERE id = :id
+        $stmt = $this->db->prepare("
+            UPDATE {$this->table} SET reset_token_hash = NULL, reset_token_expires_at = NULL WHERE {$this->primaryKey} = :id
         ");
         return $stmt->execute(['id' => $user->getId()]);
     }

@@ -13,6 +13,7 @@
  * │   ├── Router.php
  * │   ├── BaseController.php
  * │   ├── BaseManager.php
+ * │   ├── BaseEntity.php
  * │   └── View.php
  * ├── app/
  * │   ├── Controller/
@@ -34,7 +35,7 @@
  * │   └── Views/
  * │       ├── login.html
  * │       ├── dashboard.html
- * |       └── 
+ * |       └── register.html
  * └── public/
  *     ├── css/
  *     ├── js/
@@ -65,8 +66,8 @@ spl_autoload_register(function ($class) {
     $paths = [
         CORE_PATH . '/',
         APP_PATH . '/Controller/',
-        APP_PATH . '/Models/Entity/',
-        APP_PATH . '/Models/Manager/',
+        APP_PATH . '/Model/Entity/',
+        APP_PATH . '/Model/Manager/',
         CONFIG_PATH . '/'
     ];
     

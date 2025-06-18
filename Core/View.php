@@ -1,10 +1,8 @@
 <?php
 class View {
     private string $viewsPath;
-    private array $data = [];
-
-    public function __construct() {
-        $this->viewsPath = APP_PATH . '/Views';
+    private array $data = [];    public function __construct() {
+        $this->viewsPath = __DIR__ . '/../app/Views';
     }
 
     public function render(string $view, array $data = []): void {

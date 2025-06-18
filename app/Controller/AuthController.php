@@ -66,7 +66,7 @@ class AuthController extends BaseController {
         } else if (isset($_COOKIE['remember_token'])) {
             setcookie('remember_token', '', time() - 3600, '/', '', true, true);
         }
-        $this->redirect('/login');
+        $this->redirect('/G11C/G11C_A1/login');
     }
 
     public function showRegister(): void {
@@ -126,16 +126,14 @@ class AuthController extends BaseController {
         $userManager = new UserManager($this->db);
         $userManager->clearResetToken($user);
         setcookie('remember_token', '', time() - 3600, '/', '', true, true);
-    }
-
-    private function getRedirectByRole(string $role): string {
+    }    private function getRedirectByRole(string $role): string {
         switch ($role) {
             case 'admin':
             case 'superviseur':
             case 'operateur':
-                return '/dashboard';
+                return '/G11C/G11C_A1/dashboard';
             default:
-                return '/dashboard';
+                return '/G11C/G11C_A1/dashboard';
         }
     }
 }

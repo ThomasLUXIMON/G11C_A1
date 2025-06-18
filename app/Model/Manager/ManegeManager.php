@@ -1,12 +1,14 @@
 <?php
+require_once __DIR__ . '/../../../Core/BaseManager.php';
+require_once __DIR__ . '/../Entity/Manege.php';
+
 /**
  * Classe ManageManager
  * Hérite de BaseManager pour gérer les opérations CRUD sur les manèges
  * Gère les interactions avec la base de données pour les manèges
  */
-class ManageManager extends BaseManager {
-    
-    // Configuration de la table et des propriétés
+class ManegeManager extends BaseManager {
+      // Configuration de la table et des propriétés
     protected string $table = 'maneges';
     protected string $primaryKey = 'id';
     protected array $fillable = [
@@ -97,8 +99,7 @@ class ManageManager extends BaseManager {
         
         return $results;
     }
-    
-    /**
+      /**
      * Met à jour le statut d'un manège
      */
     public function updateStatus(int $id, string $nouveauStatut): bool {
@@ -224,16 +225,88 @@ class ManageManager extends BaseManager {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    // ===== MÉTHODES PRIVÉES =====
+    /**
+     * Statistiques pour le dashboard
+     */
+    public function getDashboardStats(): array {
+        $sql = "SELECT 
+                    COUNT(*) as total_maneges,
+                    COUNT(CASE WHEN statut = 'actif' THEN 1 END) as maneges_actifs,
+                    COUNT(CASE WHEN statut = 'maintenance' THEN 1 END) as maneges_maintenance,
+                    COUNT(CASE WHEN statut = 'inactif' THEN 1 END) as maneges_inactifs,
+                    AVG(capacite_max) as capacite_moyenne
+                FROM {$this->table}";
+        
+        $stmt = $this->query($sql);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Répartition des manèges par type pour graphiques
+     */
+    public function getManegesByType(): array {
+        $sql = "SELECT type, COUNT(*) as count 
+                FROM {$this->table} 
+                GROUP BY type 
+                ORDER BY count DESC";
+        
+        $stmt = $this->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Statut en temps réel des manèges
+     */
+    public function getRealTimeStatus(): array {
+        $sql = "SELECT m.id, m.nom, m.type, m.statut, m.capacite_max,
+                       COUNT(s.id) as sessions_actives,
+                       MAX(s.heure_debut) as derniere_activite
+                FROM {$this->table} m
+                LEFT JOIN sessions_manege s ON m.id = s.manege_id 
+                    AND s.statut IN ('preparation', 'en_cours')
+                GROUP BY m.id
+                ORDER BY m.nom";
+        
+        $stmt = $this->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
     
     /**
+     * Obtient le nombre de sessions actives
+     */
+    public function getActiveSessionsCount(): int {
+        $sql = "SELECT COUNT(*) as count FROM sessions_manege WHERE statut = 'en_cours'";
+        $stmt = $this->query($sql);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($result['count'] ?? 0);
+    }
+    
+    /**
+     * Obtient le nombre d'alertes en attente
+     */
+    public function getPendingAlertsCount(): int {
+        $sql = "SELECT COUNT(*) as count FROM alertes WHERE acquittee = 0";
+        $stmt = $this->query($sql);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($result['count'] ?? 0);
+    }
+
+    // ===== MÉTHODES PRIVÉES =====
+      /**
      * Hydrate un tableau de données en objet Manege
      */
     private function hydrateManege(array $data): Manege {
         return new Manege(
             $data['id'] ?? null,
-            $data['capacite_max'] ?? null,
-            $data['nom'] ?? null
+            $data['nom'] ?? '',
+            $data['type'] ?? '',
+            $data['capacite_max'] ?? 0,
+            $data['duree_tour'] ?? 0,
+            $data['age_minimum'] ?? 0,
+            $data['taille_minimum'] ?? 0,
+            $data['statut'] ?? 'actif',
+            $data['created_at'] ?? null,
+            $data['updated_at'] ?? null
         );
     }
     
@@ -258,8 +331,7 @@ class ManageManager extends BaseManager {
         if (!isset($data['duree_tour']) || $data['duree_tour'] <= 0) {
             $errors[] = "La durée du tour doit être supérieure à 0";
         }
-        
-        if (isset($data['statut']) && !in_array($data['statut'], ['actif', 'maintenance', 'ferme'])) {
+          if (isset($data['statut']) && !in_array($data['statut'], ['actif', 'maintenance', 'ferme'])) {
             $errors[] = "Statut invalide";
         }
         

@@ -14,6 +14,7 @@ $router->post('/register', 'AuthController', 'register');
 // ===== Routes Dashboard =====
 $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/api/stats', 'DashboardController', 'getStats');
+$router->get('/getManegesData', 'DashboardController', 'getManegesData');
 $router->get('/api/alerts-count', 'DashboardController', 'getAlertsCount');
 
 // ===== Routes Manèges =====

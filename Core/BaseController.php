@@ -1,4 +1,9 @@
 <?php 
+require_once __DIR__ . '/../Config/database.php';
+require_once __DIR__ . '/View.php';
+require_once __DIR__ . '/../app/Model/Manager/UserManager.php';
+require_once __DIR__ . '/../app/Model/Entity/User.php';
+
 abstract class BaseController {
     protected View $view;
     protected PDO $db;
