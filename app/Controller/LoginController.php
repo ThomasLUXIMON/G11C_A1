@@ -6,7 +6,6 @@
 
 session_start();
 
-require_once __DIR__ . '/../../Config/database.php';
 require_once __DIR__ . '/../Model/Manager/UserManager.php';
 require_once __DIR__ . '/../Model/Entity/User.php';
 

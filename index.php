@@ -109,11 +109,12 @@ set_error_handler(function($severity, $message, $file, $line) {
 if (!isset($_SESSION['user_id'])) {
     $uri = $_SERVER['REQUEST_URI'];
     if (
-        !preg_match('#^/(login|register|logout)(/|$)#', $uri) &&
-        !preg_match('#^/api/#', $uri) &&
-        $uri !== '/'
+        !preg_match('#^/G11C/G11C_A1/(login|register|logout)(/|$)#', $uri) &&
+        !preg_match('#^/G11C/G11C_A1/api/#', $uri) &&
+        $uri !== '/G11C/G11C_A1/' &&
+        $uri !== '/G11C/G11C_A1'
     ) {
-        header('Location: /login');
+        header('Location: /G11C/G11C_A1/login');
         exit;
     }
 }

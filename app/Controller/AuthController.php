@@ -105,7 +105,7 @@ class AuthController extends BaseController {
             $userManager->insert($user);            $this->json([
                 'success' => true,
                 'message' => 'Inscription réussie',
-                'redirect' => '/login'
+                'redirect' => '/G11C/G11C_A1/login'
             ]);
         } catch (Exception $e) {
             error_log('Erreur inscription: ' . $e->getMessage());

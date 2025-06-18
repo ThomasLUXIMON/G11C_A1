@@ -32,9 +32,8 @@ async function handleLogin() {
     try {
         // Préparer les données du formulaire
         const formData = new FormData(form);
-        
-        // Envoi au serveur
-        const response = await fetch('/login', {
+          // Envoi au serveur
+        const response = await fetch('/G11C/G11C_A1/login', {
             method: 'POST',
             body: formData,
             credentials: 'same-origin'

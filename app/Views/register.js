@@ -13,10 +13,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.password !== data.confirm_password) {
             alert('Les mots de passe ne correspondent pas.');
             return;
-        }
-
-        try {
-            const response = await fetch('/register', {
+        }        try {
+            const response = await fetch('/G11C/G11C_A1/register', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
@@ -25,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             const result = await response.json();            if (result.success) {
                 alert('Inscription réussie ! Redirection vers la connexion...');
-                window.location.href = result.redirect || '/login';
+                window.location.href = result.redirect || '/G11C/G11C_A1/login';
             } else {
                 alert(result.message || 'Erreur lors de l\'inscription');
             }

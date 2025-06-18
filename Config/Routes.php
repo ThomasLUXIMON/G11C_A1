@@ -1,7 +1,7 @@
 <?php 
 require_once CORE_PATH . '/Router.php';
 
-$router = new Router();
+$router = new Router('/G11C/G11C_A1');
 
 // ===== Routes d'authentification (centralisées) =====
 $router->get('/', 'AuthController', 'showLogin');
