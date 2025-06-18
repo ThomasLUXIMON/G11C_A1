@@ -72,39 +72,46 @@ class UserManager extends BaseManager {
         ]);
     }
 
-    public function updateUser(User $user): bool {
+    public function updateUser($user): bool {
+        $id = is_object($user) && method_exists($user, 'getId') ? $user->getId() : (is_int($user) ? $user : null);
+        if ($id === null) return false;
         $stmt = $this->db->prepare("
             UPDATE {$this->table} 
             SET nom = :nom, prenom = :prenom, email = :email, 
                 mot_de_passe = :mot_de_passe, type = :type, tel = :tel
             WHERE {$this->primaryKey} = :id
         ");
-
         return $stmt->execute([
-            'id' => $user->getId(),
-            'nom' => $user->getNom(),
-            'prenom' => $user->getPrenom(),
-            'email' => $user->getEmail(),
-            'mot_de_passe' => $user->getMotDePasse(),
-            'type' => $user->getType(),
-            'tel' => $user->getTel()
+            'id' => $id,
+            'nom' => is_object($user) ? $user->getNom() : null,
+            'prenom' => is_object($user) ? $user->getPrenom() : null,
+            'email' => is_object($user) ? $user->getEmail() : null,
+            'mot_de_passe' => is_object($user) ? $user->getMotDePasse() : null,
+            'type' => is_object($user) ? $user->getType() : null,
+            'tel' => is_object($user) ? $user->getTel() : null
         ]);
-    }    public function setResetToken(User $user, string $token, \DateTime $expiresAt): bool {
+    }
+
+    public function setResetToken($user, string $token, \DateTime $expiresAt): bool {
+        $id = is_object($user) && method_exists($user, 'getId') ? $user->getId() : (is_int($user) ? $user : null);
+        if ($id === null) return false;
         $stmt = $this->db->prepare("
             UPDATE {$this->table} SET reset_token_hash = :hash, reset_token_expires_at = :expires WHERE {$this->primaryKey} = :id
         ");
         return $stmt->execute([
             'hash' => hash('sha256', $token),
             'expires' => $expiresAt->format('Y-m-d H:i:s'),
-            'id' => $user->getId()
+            'id' => $id
         ]);
     }
 
-    public function clearResetToken(User $user): bool {
+    public function clearResetToken($user): bool {
+        $id = is_object($user) && method_exists($user, 'getId') ? $user->getId() : (is_int($user) ? $user : null);
+        if ($id === null) return false;
         $stmt = $this->db->prepare("
             UPDATE {$this->table} SET reset_token_hash = NULL, reset_token_expires_at = NULL WHERE {$this->primaryKey} = :id
         ");
-        return $stmt->execute(['id' => $user->getId()]);
+        return $stmt->execute(['id' => $id]);
     }
 
     private function mapToUser(array $data): User {

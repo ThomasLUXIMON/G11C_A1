@@ -26,11 +26,10 @@ class AuthController extends BaseController {
                 'email' => 'required|email',
                 'password' => 'required|min:6'
             ], $_POST);
-            if (!empty($errors)) {
-                $this->json(['success' => false, 'message' => 'Données invalides', 'errors' => $errors], 400);
+            if (!empty($errors)) {                $this->json(['success' => false, 'message' => 'Données invalides', 'errors' => $errors], 400);
                 return;
             }
-            $userManager = new UserManager($this->db);
+            $userManager = new UserManager();
             $user = $userManager->findByEmail($email);
             if (!$user || !password_verify($password, $user->getMotDePasse())) {
                 $this->json(['success' => false, 'message' => 'Identifiants incorrects'], 401);
@@ -92,11 +91,10 @@ class AuthController extends BaseController {
                 $this->json(['success' => false, 'message' => 'Adresse email invalide.'], 400);
                 return;
             }
-            if ($password !== $confirm) {
-                $this->json(['success' => false, 'message' => 'Les mots de passe ne correspondent pas.'], 400);
+            if ($password !== $confirm) {                $this->json(['success' => false, 'message' => 'Les mots de passe ne correspondent pas.'], 400);
                 return;
             }
-            $userManager = new UserManager($this->db);
+            $userManager = new UserManager();
             if ($userManager->findByEmail($email)) {
                 $this->json(['success' => false, 'message' => 'Cet email est déjà utilisé.'], 400);
                 return;
@@ -108,22 +106,22 @@ class AuthController extends BaseController {
                 'redirect' => '/G11C/G11C_A1/login'
             ]);
         } catch (Exception $e) {
-            error_log('Erreur inscription: ' . $e->getMessage());
-            $this->json(['success' => false, 'message' => 'Erreur serveur'], 500);
+            error_log('Erreur inscription: ' . $e->getMessage());            $this->json(['success' => false, 'message' => 'Erreur serveur'], 500);
         }
     }
 
     // --- Helpers ---
+    
     private function createRememberToken(User $user): void {
         $token = bin2hex(random_bytes(32));
         $expires = new \DateTime('+' . REMEMBER_TOKEN_LIFETIME . ' seconds');
-        $userManager = new UserManager($this->db);
+        $userManager = new UserManager();
         $userManager->setResetToken($user, $token, $expires);
         setcookie('remember_token', $token, $expires->getTimestamp(), '/', '', true, true);
     }
 
     private function clearRememberToken(User $user): void {
-        $userManager = new UserManager($this->db);
+        $userManager = new UserManager();
         $userManager->clearResetToken($user);
         setcookie('remember_token', '', time() - 3600, '/', '', true, true);
     }    private function getRedirectByRole(string $role): string {
