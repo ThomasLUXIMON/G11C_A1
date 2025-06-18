@@ -23,10 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: formData
             });
-            const result = await response.json();
-            if (result.success) {
+            const result = await response.json();            if (result.success) {
                 alert('Inscription réussie ! Redirection vers la connexion...');
-                window.location.href = result.redirect || '/login.html';
+                window.location.href = result.redirect || '/login';
             } else {
                 alert(result.message || 'Erreur lors de l\'inscription');
             }

@@ -117,8 +117,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>Inscription</h2>
-        <form method="post" action="/register" id="registerForm">
+        <h2>Inscription</h2>        <form method="post" action="/register" id="registerForm">
             <label for="nom">Nom</label>
             <input type="text" id="nom" name="nom" required>
 
@@ -135,9 +134,8 @@
             <input type="password" id="confirm_password" name="confirm_password" required>
 
             <button type="submit">S'inscrire</button>
-        </form>
-        <div style="text-align:center; margin-top:20px;">
-            <button type="button" style="background:#667eea; color:#fff; border:none; border-radius:4px; padding:10px 20px; cursor:pointer;" onclick="window.location.href='login.html'">
+        </form>        <div style="text-align:center; margin-top:20px;">
+            <button type="button" style="background:#667eea; color:#fff; border:none; border-radius:4px; padding:10px 20px; cursor:pointer;" onclick="window.location.href='/login'">
                 Déjà un compte ? Se connecter
             </button>
         </div>

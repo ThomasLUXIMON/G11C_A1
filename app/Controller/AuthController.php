@@ -102,11 +102,10 @@ class AuthController extends BaseController {
                 return;
             }
             $user = new User(null, $nom, $prenom, $email, password_hash($password, PASSWORD_DEFAULT), null, 'utilisateur');
-            $userManager->insert($user);
-            $this->json([
+            $userManager->insert($user);            $this->json([
                 'success' => true,
                 'message' => 'Inscription réussie',
-                'redirect' => '/login.html'
+                'redirect' => '/login'
             ]);
         } catch (Exception $e) {
             error_log('Erreur inscription: ' . $e->getMessage());
