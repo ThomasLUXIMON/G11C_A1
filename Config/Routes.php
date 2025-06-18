@@ -8,8 +8,8 @@ $router->get('/', 'LoginController', 'showLogin');
 $router->get('/login', 'LoginController', 'showLogin');
 $router->post('/login', 'LoginController', 'login');
 $router->get('/logout', 'LoginController', 'logout');
-$router->get('/register', 'LoginController', 'showRegister');
-$router->post('/register', 'LoginController', 'register');
+$router->get('/register', 'RegisterController', 'showRegister');
+$router->post('/register', 'RegisterController', 'register');
 
 // ===== Routes Dashboard =====
 $router->get('/dashboard', 'DashboardController', 'index');

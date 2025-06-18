@@ -1,55 +1,51 @@
 <?php
-// app/Controller/register.php
-session_start();
-header('Content-Type: application/json');
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
-    exit;
-}
-
+// app/Controller/RegisterController.php
 require_once __DIR__ . '/../Model/Manager/UserManager.php';
 require_once __DIR__ . '/../Model/Entity/User.php';
-require_once __DIR__ . '/../../Config/database.php';
 
-try {
-    $pdo = Database::getInstance()->getConnection();
-    $userManager = new UserManager($pdo);
-
-    $nom = trim($_POST['nom'] ?? '');
-    $prenom = trim($_POST['prenom'] ?? '');
-    $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
-    $password = $_POST['password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
-
-    if (empty($nom) || empty($prenom) || empty($email) || empty($password) || empty($confirm_password)) {
-        echo json_encode(['success' => false, 'message' => 'Tous les champs sont requis']);
-        exit;
-    }
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        echo json_encode(['success' => false, 'message' => 'Adresse email invalide']);
-        exit;
-    }
-    if ($password !== $confirm_password) {
-        echo json_encode(['success' => false, 'message' => 'Les mots de passe ne correspondent pas']);
-        exit;
-    }
-    if ($userManager->findByEmail($email)) {
-        echo json_encode(['success' => false, 'message' => 'Cet email est déjà utilisé']);
-        exit;
+class RegisterController extends BaseController {
+    public function showRegister(): void {
+        $this->render('register');
     }
 
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-    $user = new User(null, $nom, $prenom, $email, $hashedPassword, null, 'utilisateur');
-    $success = $userManager->insert($user);
-
-    if ($success) {
-        echo json_encode(['success' => true, 'message' => 'Inscription réussie !', 'redirect' => 'login.html']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Erreur lors de l\'inscription']);
+    public function register(): void {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                $this->json(['success' => false, 'message' => 'Méthode non autorisée'], 405);
+                return;
+            }
+            $nom = trim($_POST['nom'] ?? '');
+            $prenom = trim($_POST['prenom'] ?? '');
+            $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+            $password = $_POST['password'] ?? '';
+            $confirm = $_POST['confirm_password'] ?? '';
+            if (!$nom || !$prenom || !$email || !$password || !$confirm) {
+                $this->json(['success' => false, 'message' => 'Tous les champs sont requis.'], 400);
+                return;
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $this->json(['success' => false, 'message' => 'Adresse email invalide.'], 400);
+                return;
+            }
+            if ($password !== $confirm) {
+                $this->json(['success' => false, 'message' => 'Les mots de passe ne correspondent pas.'], 400);
+                return;
+            }
+            $userManager = new UserManager($this->db);
+            if ($userManager->findByEmail($email)) {
+                $this->json(['success' => false, 'message' => 'Cet email est déjà utilisé.'], 400);
+                return;
+            }
+            $user = new User(null, $nom, $prenom, $email, password_hash($password, PASSWORD_DEFAULT), null, 'utilisateur');
+            $userManager->insert($user);
+            $this->json([
+                'success' => true,
+                'message' => 'Inscription réussie',
+                'redirect' => '/login.html'
+            ]);
+        } catch (Exception $e) {
+            error_log('Erreur inscription: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'Erreur serveur'], 500);
+        }
     }
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Erreur serveur : ' . $e->getMessage()]);
 }
