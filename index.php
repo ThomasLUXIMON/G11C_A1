@@ -20,9 +20,6 @@
  * │   │   ├── AuthController.php
  * │   │   ├── DashboardController.php
  * │   │   ├── ManageController.php
- * │   │   ├── SessionController.php
- * │   │   ├── SecurityController.php
- * │   │   └── TivaController.php
  * │   ├── Model/
  * │   │   ├──Entity/
  * │   │   │   ├── User.php
@@ -35,6 +32,9 @@
  * │   └── Views/
  * │       ├── login.html
  * │       ├── dashboard.html
+ * │       ├── login.js
+ * │       ├── dashboard.js
+ * │       ├── register.js
  * |       └── register.html
  * └── public/
  *     ├── css/

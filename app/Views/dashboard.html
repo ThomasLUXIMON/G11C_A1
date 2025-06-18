@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
   <style>
     body {
@@ -16,116 +17,412 @@
       color: #2d3748;
       min-height: 100vh;
       display: flex;
+      margin: 0;
     }
 
     .sidebar {
-      width: 220px;
+      width: 250px;
       background: #2a69ac;
       color: white;
       display: flex;
       flex-direction: column;
       padding: 20px;
       min-height: 100vh;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
 
     .sidebar h4 {
       margin-bottom: 30px;
       text-align: center;
       font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
 
     .sidebar a {
       color: white;
       text-decoration: none;
-      padding: 10px;
-      margin-bottom: 10px;
-      display: block;
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       border-radius: 8px;
-      transition: background 0.2s;
+      transition: all 0.3s ease;
     }
 
-    .sidebar a:hover {
+    .sidebar a:hover, .sidebar a.active {
       background-color: #1e4e8c;
+      transform: translateX(5px);
+    }
+
+    .sidebar hr {
+      border-color: rgba(255,255,255,0.3);
+      margin: 20px 0;
     }
 
     .main-content {
       flex-grow: 1;
       padding: 20px;
+      overflow-y: auto;
     }
 
     .navbar {
       background: linear-gradient(to right, #2a69ac, #4dabf7);
-      border-radius: 8px;
-      padding: 10px 20px;
-      margin-bottom: 20px;
+      border-radius: 12px;
+      padding: 15px 25px;
+      margin-bottom: 25px;
+      color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    .navbar .navbar-brand {
-      color: white !important;
+    .navbar h5 {
+      margin: 0;
       font-size: 1.5rem;
       font-weight: bold;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
     }
 
     .user-info {
-      color: white;
-      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 15px;
     }
 
-    .title {
-      text-align: center;
-      font-size: 2rem;
-      font-weight: bold;
-      color: #2a69ac;
-      margin-bottom: 30px;
+    .user-info .badge {
+      padding: 5px 10px;
+      font-size: 0.85rem;
     }
 
-    .card {
+    .stat-card {
+      background: white;
       border: none;
       border-radius: 16px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      margin-bottom: 20px;
-      padding: 20px;
+      padding: 25px;
+      text-align: center;
+      height: 100%;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
     }
 
-    .card h5 {
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(to right, #667eea, #764ba2);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+    .stat-card .stat-icon {
+      font-size: 2.5rem;
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+
+    .stat-card .stat-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #2d3748;
+      margin-bottom: 5px;
+    }
+
+    .stat-card .stat-label {
+      font-size: 0.95rem;
+      color: #718096;
+      font-weight: 600;
+    }
+
+    .manege-card {
+      background: white;
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .manege-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+    .manege-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .manege-name {
+      font-size: 1.25rem;
+      font-weight: bold;
       color: #2a69ac;
+      margin: 0;
+    }
+
+    .manege-type {
+      font-size: 0.9rem;
+      color: #718096;
+      font-style: italic;
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-actif {
+      background-color: #c6f6d5;
+      color: #276749;
+    }
+
+    .status-maintenance {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-ferme {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    .manege-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+      background: #f7fafc;
+      border-radius: 8px;
+    }
+
+    .info-icon {
+      font-size: 1.5rem;
+      color: #4dabf7;
+      margin-bottom: 5px;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #2d3748;
+    }
+
+    .info-label {
+      font-size: 0.85rem;
+      color: #718096;
+    }
+
+    .temperature-display {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 15px;
+      background: linear-gradient(135deg, #f97316, #fb923c);
+      color: white;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .chart-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .chart-header {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #2a69ac;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .refresh-btn {
+      background: #4dabf7;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .refresh-btn:hover {
+      background: #2a69ac;
+      transform: translateY(-2px);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2a69ac;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .alert-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .alert-success {
+      background: #48bb78;
+    }
+
+    .alert-error {
+      background: #f56565;
     }
   </style>
 </head>
 <body>
-  <!-- Barre latérale -->
+  <!-- Sidebar -->
   <div class="sidebar">
-    <h4><i class="fas fa-user-cog"></i> Menu</h4>
-    <a href="dashboard.html"><i class="fas fa-home"></i> Accueil</a>
-    <a href="mon_compte.html"><i class="fas fa-user"></i> Mon Compte</a>
+    <h4><i class="fas fa-horse"></i> Gestion Manège</h4>
+    <a href="/G11C/G11C_A1/dashboard" class="active"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+    <a href="/G11C/G11C_A1/maneges"><i class="fas fa-horse"></i> Manèges</a>
+    <a href="/G11C/G11C_A1/MonCompte"><i class="fas fa-play-circle"></i> Mon Compte</a>
+    <a href="/G11C/G11C_A1/security"><i class="fas fa-shield-alt"></i> Sécurité</a>
+    <hr>
+    <a href="/G11C/G11C_A1/admin/dashboard"><i class="fas fa-cogs"></i> Administration</a>
     <a href="/G11C/G11C_A1/logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
   </div>
 
   <!-- Contenu principal -->
   <div class="main-content">
-    <nav class="navbar">
-      <span class="navbar-brand"><i class="fas fa-ferris-wheel"></i> Système de Gestion de Manège</span>
-      <span class="user-info"><i class="fas fa-user-circle"></i> Jean Dupont</span>
-    </nav>
-
-    <h1 class="title">Tableau de Bord - Tous les manèges</h1>
-
-    <div class="row" id="all-manege-details">
-      <!-- Cartes des manèges injectées ici -->
+    <!-- Header -->
+    <div class="navbar">
+      <h5><i class="fas fa-chart-line"></i> Tableau de Bord</h5>
+      <div class="user-info">
+        <span id="user-name">Chargement...</span>
+        <span class="badge bg-light text-dark" id="user-role">...</span>
+        <button class="refresh-btn" onclick="refreshDashboard()">
+          <i class="fas fa-sync-alt"></i> Actualiser
+        </button>
+      </div>
     </div>
 
-    <h2 class="mt-5 mb-3" style="color:#2a69ac;">Nombre de passagers et Température par manège</h2>
-    <canvas id="passengersChart" style="max-width: 700px;"></canvas>
+    <!-- Statistiques -->
+    <div class="row mb-4">
+      <div class="col-md-3 mb-3">
+        <div class="stat-card">
+          <i class="fas fa-horse stat-icon"></i>
+          <div class="stat-number" id="total-maneges">-</div>
+          <div class="stat-label">Manèges Total</div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="stat-card">
+          <i class="fas fa-check-circle stat-icon" style="color: #48bb78;"></i>
+          <div class="stat-number" id="maneges-actifs">-</div>
+          <div class="stat-label">Manèges Actifs</div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="stat-card">
+          <i class="fas fa-users stat-icon" style="color: #4dabf7;"></i>
+          <div class="stat-number" id="capacite-totale">-</div>
+          <div class="stat-label">Capacité Totale</div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="stat-card">
+          <i class="fas fa-thermometer-half stat-icon" style="color: #f97316;"></i>
+          <div class="stat-number" id="temperature-moyenne">-°C</div>
+          <div class="stat-label">Temp. Moyenne</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des manèges -->
+    <h3 class="mb-3" style="color: #2a69ac;">
+      <i class="fas fa-list"></i> État des Manèges en Temps Réel
+    </h3>
+    <div id="maneges-container">
+      <div class="text-center py-5">
+        <div class="loading-spinner"></div>
+        <p class="mt-3 text-muted">Chargement des manèges...</p>
+      </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="chart-container">
+          <h4 class="chart-header">
+            <i class="fas fa-chart-bar"></i> Capacité par Manège
+          </h4>
+          <canvas id="capaciteChart" height="300"></canvas>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="chart-container">
+          <h4 class="chart-header">
+            <i class="fas fa-thermometer-half"></i> Température par Manège
+          </h4>
+          <canvas id="temperatureChart" height="300"></canvas>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Scripts -->
-  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/G11C/G11C_A1/dashboard.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
