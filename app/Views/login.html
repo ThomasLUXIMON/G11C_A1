@@ -272,7 +272,7 @@
 
         <div id="alert-container"></div>
 
-        <form id="loginForm" method="POST" action="../Controller/login.php">
+        <form id="loginForm" method="POST" action="../Controller/LoginController.php">
             <div class="form-group with-icon">
                 <label for="email">Adresse Email</label>
                 <span class="input-icon">📧</span>
@@ -366,7 +366,7 @@
                 const formData = new FormData(form);
                 
                 // Simuler l'envoi au serveur (remplacer par votre endpoint réel)
-                const response = await fetch('../Controller/login.php', {
+                const response = await fetch('../Controller/LoginController.php', {
                     method: 'POST',
                     body: formData,
                     credentials: 'same-origin'

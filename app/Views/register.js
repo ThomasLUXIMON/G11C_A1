@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            const response = await fetch('../Controller/register.php', {
+            const response = await fetch('../Controller/RegisterController.php', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
