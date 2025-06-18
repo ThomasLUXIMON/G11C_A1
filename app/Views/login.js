@@ -34,7 +34,7 @@ async function handleLogin() {
         const formData = new FormData(form);
         
         // Envoi au serveur
-        const response = await fetch('../Controller/login.php', {
+        const response = await fetch('/LoginController.php', {
             method: 'POST',
             body: formData,
             credentials: 'same-origin'

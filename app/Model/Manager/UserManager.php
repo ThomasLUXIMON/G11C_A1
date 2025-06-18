@@ -69,6 +69,24 @@ class UserManager {
         ]);
     }
 
+    public function setResetToken(User $user, string $token, \DateTime $expiresAt): bool {
+        $stmt = $this->pdo->prepare("
+            UPDATE Utilisateurs SET reset_token_hash = :hash, reset_token_expires_at = :expires WHERE id = :id
+        ");
+        return $stmt->execute([
+            'hash' => hash('sha256', $token),
+            'expires' => $expiresAt->format('Y-m-d H:i:s'),
+            'id' => $user->getId()
+        ]);
+    }
+
+    public function clearResetToken(User $user): bool {
+        $stmt = $this->pdo->prepare("
+            UPDATE Utilisateurs SET reset_token_hash = NULL, reset_token_expires_at = NULL WHERE id = :id
+        ");
+        return $stmt->execute(['id' => $user->getId()]);
+    }
+
     private function mapToUser(array $data): User {
         $expiresAt = null;
         if ($data['reset_token_expires_at']) {

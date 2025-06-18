@@ -3,7 +3,6 @@ class DashboardController extends BaseController {
     
     public function index(): void {
         $user = $this->requireAuth();
-        
         $data = [
             'user' => $user,
             'stats' => $this->getGeneralStats(),
@@ -11,7 +10,6 @@ class DashboardController extends BaseController {
             'active_sessions' => $this->getActiveSessions(),
             'maneges' => $this->getManegesStatus()
         ];
-        
         $this->render('dashboard/index', $data);
     }
     

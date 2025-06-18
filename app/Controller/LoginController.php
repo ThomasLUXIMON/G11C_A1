@@ -10,66 +10,92 @@ require_once __DIR__ . '/../../Config/database.php';
 require_once __DIR__ . '/../Model/Manager/UserManager.php';
 require_once __DIR__ . '/../Model/Entity/User.php';
 
-header('Content-Type: application/json');
+class LoginController extends BaseController {
+    public function showLogin(): void {
+        if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
+            $this->redirect('/dashboard');
+        }
+        $this->render('auth/login');
+    }
 
-// Vérifier si c'est une requête POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
-    exit;
+    public function login(): void {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                $this->json(['success' => false, 'message' => 'Méthode non autorisée'], 405);
+                return;
+            }
+            $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+            $password = $_POST['password'] ?? '';
+            $remember = isset($_POST['remember']);
+            $errors = $this->validateInput([
+                'email' => 'required|email',
+                'password' => 'required|min:6'
+            ], $_POST);
+            if (!empty($errors)) {
+                $this->json(['success' => false, 'message' => 'Données invalides', 'errors' => $errors], 400);
+                return;
+            }
+            $userManager = new UserManager($this->db);
+            $user = $userManager->findByEmail($email);
+            if (!$user || !password_verify($password, $user->getMotDePasse())) {
+                $this->json(['success' => false, 'message' => 'Identifiants incorrects'], 401);
+                return;
+            }
+            $this->setUserSession($user);
+            if ($remember) {
+                $this->createRememberToken($user);
+            }
+            $redirect = $this->getRedirectByRole($user->getType());
+            $this->json([
+                'success' => true,
+                'message' => 'Connexion réussie',
+                'redirect' => $redirect,
+                'user' => [
+                    'id' => $user->getId(),
+                    'name' => trim($user->getPrenom() . ' ' . $user->getNom()),
+                    'email' => $user->getEmail(),
+                    'role' => $user->getType()
+                ]
+            ]);
+        } catch (Exception $e) {
+            error_log("Erreur lors de la connexion: " . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'Erreur serveur'], 500);
+        }
+    }
+
+    public function logout(): void {
+        $user = $this->getCurrentUser();
+        $this->destroyUserSession();
+        if ($user) {
+            $this->clearRememberToken($user);
+        } else if (isset($_COOKIE['remember_token'])) {
+            setcookie('remember_token', '', time() - 3600, '/', '', true, true);
+        }
+        $this->redirect('/login');
+    }
+
+    private function createRememberToken(User $user): void {
+        $token = bin2hex(random_bytes(32));
+        $expires = new \DateTime('+' . REMEMBER_TOKEN_LIFETIME . ' seconds');
+        $userManager = new UserManager($this->db);
+        $userManager->setResetToken($user, $token, $expires);
+        setcookie('remember_token', $token, $expires->getTimestamp(), '/', '', true, true);
+    }
+
+    private function clearRememberToken(User $user): void {
+        $userManager = new UserManager($this->db);
+        $userManager->clearResetToken($user);
+        setcookie('remember_token', '', time() - 3600, '/', '', true, true);
+    }
+
+    private function getRedirectByRole(string $role): string {
+        switch ($role) {
+            case 'admin':
+            case 'superviseur':
+            case 'operateur':
+                return '/dashboard';
+            default:
+                return '/dashboard';
+        }
+    }
 }
-
-try {
-    // Récupérer les données du formulaire
-    $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
-    $password = $_POST['password'] ?? '';
-    $remember = isset($_POST['remember']);
-
-    // Validation des champs
-    if (empty($email) || empty($password)) {
-        echo json_encode(['success' => false, 'message' => 'Tous les champs sont requis']);
-        exit;
-    }
-
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        echo json_encode(['success' => false, 'message' => 'Adresse email invalide']);
-        exit;
-    }
-
-    // Connexion à la base de données
-    $pdo = Database::getInstance()->getConnection();
-    $userManager = new UserManager($pdo);
-    $user = $userManager->findByEmail($email);
-
-    if (!$user) {
-        // Simuler la vérification du mot de passe pour éviter le timing attack
-        password_verify($password, '$2y$10$dummy.hash.to.prevent.timing.attack');
-        
-        echo json_encode(['success' => false, 'message' => 'Identifiants incorrects']);
-        exit;
-    }
-
-    // Vérifier le mot de passe
-    if (!password_verify($password, $user->getMotDePasse())) {
-        echo json_encode(['success' => false, 'message' => 'Identifiants incorrects']);
-        exit;
-    }
-
-    // Créer la session utilisateur
-    $_SESSION['user_id'] = $user->getId();
-    $_SESSION['user_email'] = $user->getEmail();
-    $_SESSION['user_nom'] = $user->getNom();
-    $_SESSION['user_prenom'] = $user->getPrenom();
-    $_SESSION['user_type'] = $user->getType();
-
-    echo json_encode(['success' => true, 'message' => 'Connexion réussie !', 'redirect' => 'dashboard.html']);
-    exit;
-
-} catch (PDOException $e) {
-    error_log("Erreur de base de données lors de la connexion: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Erreur de base de données']);
-} catch (Exception $e) {
-    error_log("Erreur lors de la connexion: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Erreur serveur']);
-}
-?>
