@@ -105,9 +105,17 @@ set_error_handler(function($severity, $message, $file, $line) {
 });
 
 // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
+// Correction : ne pas rediriger si la requête cible /login ou /register ou /api
 if (!isset($_SESSION['user_id'])) {
-    header('Location: app/Views/login.html');
-    exit;
+    $uri = $_SERVER['REQUEST_URI'];
+    if (
+        !preg_match('#^/(login|register|logout)(/|$)#', $uri) &&
+        !preg_match('#^/api/#', $uri) &&
+        $uri !== '/'
+    ) {
+        header('Location: /login');
+        exit;
+    }
 }
 
 try {

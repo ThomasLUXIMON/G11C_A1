@@ -3,13 +3,13 @@ require_once CORE_PATH . '/Router.php';
 
 $router = new Router();
 
-// ===== Routes d'authentification =====
-$router->get('/', 'LoginController', 'showLogin');
-$router->get('/login', 'LoginController', 'showLogin');
-$router->post('/login', 'LoginController', 'login');
-$router->get('/logout', 'LoginController', 'logout');
-$router->get('/register', 'RegisterController', 'showRegister');
-$router->post('/register', 'RegisterController', 'register');
+// ===== Routes d'authentification (centralisées) =====
+$router->get('/', 'AuthController', 'showLogin');
+$router->get('/login', 'AuthController', 'showLogin');
+$router->post('/login', 'AuthController', 'login');
+$router->get('/logout', 'AuthController', 'logout');
+$router->get('/register', 'AuthController', 'showRegister');
+$router->post('/register', 'AuthController', 'register');
 
 // ===== Routes Dashboard =====
 $router->get('/dashboard', 'DashboardController', 'index');
