@@ -70,5 +70,76 @@ class ManageController extends BaseController {
             $this->json(['success' => false, 'message' => 'Erreur lors de la suppression'], 500);
         }
     }
-    // (Tu peux ajouter show, update ici si besoin)
+
+    public function show($id): void {
+        $this->requireAuth();
+        if (!$id) {
+            $this->json(['success' => false, 'message' => 'ID manège manquant'], 400);
+            return;
+        }
+        $manager = new ManegeManager();
+        $manege = $manager->findWithDetails((int)$id);
+        if ($manege) {
+            $data = [
+                'id' => method_exists($manege, 'getId') ? $manege->getId() : ($manege['id'] ?? null),
+                'nom' => method_exists($manege, 'getNom') ? $manege->getNom() : ($manege['nom'] ?? ''),
+                'type' => method_exists($manege, 'getType') ? $manege->getType() : ($manege['type'] ?? ''),
+                'capacite_max' => method_exists($manege, 'getCapaciteMax') ? $manege->getCapaciteMax() : ($manege['capacite_max'] ?? ''),
+                'duree_tour' => method_exists($manege, 'getDureeTour') ? $manege->getDureeTour() : ($manege['duree_tour'] ?? ''),
+                'age_minimum' => method_exists($manege, 'getAgeMinimum') ? $manege->getAgeMinimum() : ($manege['age_minimum'] ?? ''),
+                'taille_minimum' => method_exists($manege, 'getTailleMinimum') ? $manege->getTailleMinimum() : ($manege['taille_minimum'] ?? ''),
+                'statut' => method_exists($manege, 'getStatut') ? $manege->getStatut() : ($manege['statut'] ?? '')
+            ];
+            $this->json(['success' => true, 'data' => [$data]]);
+        } else {
+            $this->json(['success' => false, 'message' => 'Manège non trouvé'], 404);
+        }
+    }
+
+    public function update($id): void {
+        $this->requireAuth();
+        if (!$id) {
+            $this->json(['success' => false, 'message' => 'ID manège manquant'], 400);
+            return;
+        }
+        // Support application/json et x-www-form-urlencoded
+        $input = [];
+        if (isset($_SERVER['CONTENT_TYPE']) && str_contains($_SERVER['CONTENT_TYPE'], 'application/json')) {
+            $input = json_decode(file_get_contents('php://input'), true) ?: [];
+        } else {
+            $input = $_POST;
+        }
+        $nom = $input['nom_manege'] ?? $input['nom'] ?? null;
+        $type = $input['type'] ?? null;
+        $capacite = isset($input['capacite']) ? (int)$input['capacite'] : (isset($input['capacite_max']) ? (int)$input['capacite_max'] : 0);
+        $statut = $input['statut'] ?? null;
+        $duree_tour = isset($input['duree_tour']) ? (int)$input['duree_tour'] : 0;
+        $age_minimum = isset($input['age_minimum']) ? (int)$input['age_minimum'] : 0;
+        $taille_minimum = isset($input['taille_minimum']) ? (int)$input['taille_minimum'] : 0;
+        if (!$nom || !$type || !$capacite || !$statut) {
+            $this->json(['success' => false, 'message' => 'Champs obligatoires manquants'], 400);
+            return;
+        }
+        $data = [
+            'nom' => $nom,
+            'type' => $type,
+            'capacite_max' => $capacite,
+            'statut' => $statut,
+            'duree_tour' => $duree_tour,
+            'age_minimum' => $age_minimum,
+            'taille_minimum' => $taille_minimum
+        ];
+        $manager = new ManegeManager();
+        try {
+            $ok = $manager->update((int)$id, $data);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+            return;
+        }
+        if ($ok) {
+            $this->json(['success' => true, 'message' => 'Manège modifié']);
+        } else {
+            $this->json(['success' => false, 'message' => 'Erreur lors de la modification'], 500);
+        }
+    }
 }

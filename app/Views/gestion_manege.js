@@ -34,28 +34,91 @@ $(function() {
   `;
   $('#gestion-manege-container').html(formHtml);
 
-  // Soumission du formulaire
-  $(document).on('submit', '#form-ajout-manege', function(e) {
-    e.preventDefault();
-    const data = $(this).serialize();
+  // Fonction pour charger un manège dans le formulaire pour édition
+  window.editManege = function(id) {
     $.ajax({
-      url: '/G11C/G11C_A1/maneges',
-      method: 'POST',
-      data: data,
+      url: '/G11C/G11C_A1/maneges/' + id,
+      method: 'GET',
       dataType: 'json',
-      success: function(resp) {
-        if (resp.success) {
-          $('#ajout-manege-message').html('<div class="alert alert-success">Manège ajouté avec succès !</div>');
-          $('#form-ajout-manege')[0].reset();
+      success: function(response) {
+        if (response.success && response.data.length > 0) {
+          const manege = response.data[0];
+          $('#nom_manege').val(manege.nom);
+          $('#capacite').val(manege.capacite_max);
+          $('#type').val(manege.type);
+          $('#statut').val(manege.statut);
+          // Ajoute ou met à jour le champ caché pour l'id
+          if ($('#manege-id').length === 0) {
+            $('#form-ajout-manege').append('<input type="hidden" id="manege-id" name="id">');
+          }
+          $('#manege-id').val(manege.id);
+          $('#form-ajout-manege button[type=submit]').text('Mettre à jour le manège');
         } else {
-          $('#ajout-manege-message').html('<div class="alert alert-danger">' + (resp.message || 'Erreur lors de l\'ajout') + '</div>');
+          alert('Manège non trouvé');
         }
       },
-      error: function(xhr) {
-        let msg = 'Erreur serveur';
-        if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
-        $('#ajout-manege-message').html('<div class="alert alert-danger">' + msg + '</div>');
+      error: function() {
+        alert('Erreur lors du chargement du manège');
       }
     });
+  };
+
+  // Soumission du formulaire (création ou édition)
+  $(document).on('submit', '#form-ajout-manege', function(e) {
+    e.preventDefault();
+    const id = $('#manege-id').val();
+    const data = $(this).serialize();
+    if (id) {
+      // Edition : PUT
+      const dataObj = {
+        nom_manege: $('#nom_manege').val(),
+        capacite: $('#capacite').val(),
+        type: $('#type').val(),
+        statut: $('#statut').val()
+      };
+      $.ajax({
+        url: '/G11C/G11C_A1/maneges/' + id,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(dataObj),
+        dataType: 'json',
+        success: function(resp) {
+          if (resp.success) {
+            $('#ajout-manege-message').html('<div class="alert alert-success">Manège modifié avec succès !</div>');
+            $('#form-ajout-manege')[0].reset();
+            $('#manege-id').remove();
+            $('#form-ajout-manege button[type=submit]').text('Ajouter le manège');
+          } else {
+            $('#ajout-manege-message').html('<div class="alert alert-danger">' + (resp.message || 'Erreur lors de la modification') + '</div>');
+          }
+        },
+        error: function(xhr) {
+          let msg = 'Erreur serveur';
+          if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+          $('#ajout-manege-message').html('<div class="alert alert-danger">' + msg + '</div>');
+        }
+      });
+    } else {
+      // Création : POST
+      $.ajax({
+        url: '/G11C/G11C_A1/maneges',
+        method: 'POST',
+        data: data,
+        dataType: 'json',
+        success: function(resp) {
+          if (resp.success) {
+            $('#ajout-manege-message').html('<div class="alert alert-success">Manège ajouté avec succès !</div>');
+            $('#form-ajout-manege')[0].reset();
+          } else {
+            $('#ajout-manege-message').html('<div class="alert alert-danger">' + (resp.message || 'Erreur lors de l\'ajout') + '</div>');
+          }
+        },
+        error: function(xhr) {
+          let msg = 'Erreur serveur';
+          if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+          $('#ajout-manege-message').html('<div class="alert alert-danger">' + msg + '</div>');
+        }
+      });
+    }
   });
 });
