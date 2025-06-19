@@ -24,19 +24,25 @@ class ManageController extends BaseController {
 
     public function store(): void {
         $this->requireAuth();
+        // Permet de supporter application/json en plus de x-www-form-urlencoded
+        if (empty($_POST)) {
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (is_array($input)) {
+                $_POST = $input;
+            }
+        }
         $nom = $_POST['nom_manege'] ?? $_POST['nom'] ?? null;
         $type = $_POST['type'] ?? null;
-        $capacite = $_POST['capacite'] ?? $_POST['capacite_max'] ?? null;
+        $capacite = isset($_POST['capacite']) ? (int)$_POST['capacite'] : (isset($_POST['capacite_max']) ? (int)$_POST['capacite_max'] : 0);
         $statut = $_POST['statut'] ?? null;
-        // Champs optionnels
-        $duree_tour = $_POST['duree_tour'] ?? null;
-        $age_minimum = $_POST['age_minimum'] ?? null;
-        $taille_minimum = $_POST['taille_minimum'] ?? null;
+        $duree_tour = isset($_POST['duree_tour']) ? (int)$_POST['duree_tour'] : 0;
+        $age_minimum = isset($_POST['age_minimum']) ? (int)$_POST['age_minimum'] : 0;
+        $taille_minimum = isset($_POST['taille_minimum']) ? (int)$_POST['taille_minimum'] : 0;
         if (!$nom || !$type || !$capacite || !$statut) {
             $this->json(['success' => false, 'message' => 'Champs obligatoires manquants'], 400);
             return;
         }
-        $manege = new Manege(null, $nom, $type, $capacite, $statut, $duree_tour, $age_minimum, $taille_minimum);
+        $manege = new Manege(null, $nom, $type, $capacite, $duree_tour, $age_minimum, $taille_minimum, $statut);
         $manager = new ManegeManager();
         $ok = $manager->insert($manege);
         if ($ok) {
@@ -45,5 +51,24 @@ class ManageController extends BaseController {
             $this->json(['success' => false, 'message' => 'Erreur lors de l\'ajout'], 500);
         }
     }
-    // (Tu peux ajouter show, update, delete ici si besoin)
+
+    public function delete($id = null): void {
+        $this->requireAuth();
+        // Si l'id n'est pas passé en argument (cas GET/POST), on tente de le récupérer dans $_POST/$_GET
+        if ($id === null) {
+            $id = $_POST['id'] ?? $_GET['id'] ?? null;
+        }
+        if (!$id) {
+            $this->json(['success' => false, 'message' => 'ID manège manquant'], 400);
+            return;
+        }
+        $manager = new ManegeManager();
+        $ok = $manager->delete((int)$id);
+        if ($ok) {
+            $this->json(['success' => true, 'message' => 'Manège supprimé']);
+        } else {
+            $this->json(['success' => false, 'message' => 'Erreur lors de la suppression'], 500);
+        }
+    }
+    // (Tu peux ajouter show, update ici si besoin)
 }

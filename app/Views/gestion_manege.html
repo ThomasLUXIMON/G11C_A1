@@ -374,7 +374,7 @@
         window.deleteManege = function(id) {
             if (confirm('Voulez-vous vraiment supprimer ce manège ?')) {
                 $.ajax({
-                    url: `${apiUrl}?id=${id}`,
+                    url: `${apiUrl}/${id}`,
                     method: 'DELETE',
                     dataType: 'json'
                 }).done(response => {
