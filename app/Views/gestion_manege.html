@@ -314,7 +314,7 @@
             };
 
             $.ajax({
-                url: id ? `${apiUrl}?id=${id}` : apiUrl,
+                url: id ? `${apiUrl}/${id}` : apiUrl,
                 method: id ? 'PUT' : 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(data),
@@ -338,7 +338,7 @@
         // Modifier un manège
         window.editManege = function(id) {
             $.ajax({
-                url: `${apiUrl}?id=${id}`,
+                url: `${apiUrl}/${id}`,
                 method: 'GET',
                 dataType: 'json'
             }).done(response => {

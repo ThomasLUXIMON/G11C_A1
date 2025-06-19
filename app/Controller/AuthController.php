@@ -91,7 +91,8 @@ class AuthController extends BaseController {
                 $this->json(['success' => false, 'message' => 'Adresse email invalide.'], 400);
                 return;
             }
-            if ($password !== $confirm) {                $this->json(['success' => false, 'message' => 'Les mots de passe ne correspondent pas.'], 400);
+            if ($password !== $confirm) {
+                $this->json(['success' => false, 'message' => 'Les mots de passe ne correspondent pas.'], 400);
                 return;
             }
             $userManager = new UserManager();
@@ -100,13 +101,24 @@ class AuthController extends BaseController {
                 return;
             }
             $user = new User(null, $nom, $prenom, $email, password_hash($password, PASSWORD_DEFAULT), null, Type::agent);
-            $userManager->insert($user);            $this->json([
-                'success' => true,
-                'message' => 'Inscription réussie',
-                'redirect' => '/G11C/G11C_A1/login'
-            ]);
+            $userManager->insert($user);
+            // Redirection si non-AJAX
+            $isAjax = (
+                (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+                (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
+            );
+            if ($isAjax) {
+                $this->json([
+                    'success' => true,
+                    'message' => 'Inscription réussie',
+                    'redirect' => '/G11C/G11C_A1/login'
+                ]);
+            } else {
+                $this->redirect('/G11C/G11C_A1/login');
+            }
         } catch (Exception $e) {
-            error_log('Erreur inscription: ' . $e->getMessage());            $this->json(['success' => false, 'message' => 'Erreur serveur'], 500);
+            error_log('Erreur inscription: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'Erreur serveur'], 500);
         }
     }
 
