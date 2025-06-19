@@ -3,7 +3,6 @@
  * Classe Capteur_temperature
  * Hérite de la classe abstraite Capteur
  * Gère spécifiquement les capteurs de température des manèges
- * Adaptée pour fonctionner avec CapteurTemperatureManager
  */
 
 require_once __DIR__ . '/Capteur.php';
