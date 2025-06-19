@@ -55,4 +55,8 @@ $router->get('/admin/operateurs', 'AdminController', 'operateurs');
 $router->get('/admin/config', 'AdminController', 'config');
 $router->post('/admin/config', 'AdminController', 'updateConfig');
 
+// ===== Routes Capteurs Température =====
+$router->post('/api/sensors/{capteurId}/reading', 'ApiTemperatureController', 'receiveReading');
+$router->get('/api/sensors/{capteurId}/readings', 'ApiTemperatureController', 'getReadings');
+
 return $router;
