@@ -39,7 +39,16 @@ async function handleLogin() {
             credentials: 'same-origin'
         });
 
-        const result = await response.json();        if (response.ok && result.success) {
+        let result;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        } else {
+            const text = await response.text();
+            showAlert('Erreur serveur : ' + text.substring(0, 200), 'error');
+            throw new Error('Réponse non JSON');
+        }
+        if (response.ok && result.success) {
             // Redirection immédiate après succès
             window.location.href = result.redirect || '/G11C/G11C_A1/dashboard';
         } else {

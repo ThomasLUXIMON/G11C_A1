@@ -99,7 +99,7 @@ class AuthController extends BaseController {
                 $this->json(['success' => false, 'message' => 'Cet email est déjà utilisé.'], 400);
                 return;
             }
-            $user = new User(null, $nom, $prenom, $email, password_hash($password, PASSWORD_DEFAULT), null, 'employé');
+            $user = new User(null, $nom, $prenom, $email, password_hash($password, PASSWORD_DEFAULT), null, Type::agent);
             $userManager->insert($user);            $this->json([
                 'success' => true,
                 'message' => 'Inscription réussie',

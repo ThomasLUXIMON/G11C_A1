@@ -127,7 +127,7 @@ class UserManager extends BaseManager {
             $data['email'],
             $data['mot_de_passe'],
             $data['tel'],
-            $data['type'] ?? 'utilisateur',
+            isset($data['type']) ? Type::from($data['type']) : Type::agent,
             $data['reset_token_hash'],
             $expiresAt
         );
