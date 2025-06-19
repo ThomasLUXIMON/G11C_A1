@@ -112,4 +112,8 @@ abstract class BaseController {
         
         return $errors;
     }
+    
+    protected function isAuthenticated(): bool {
+        return isset($_SESSION['logged_in']) && $_SESSION['logged_in'] && isset($_SESSION['user_id']);
+    }
 }

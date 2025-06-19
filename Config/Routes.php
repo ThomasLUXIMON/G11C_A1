@@ -10,9 +10,13 @@ $router->post('/login', 'AuthController', 'login');
 $router->get('/logout', 'AuthController', 'logout');
 $router->get('/register', 'AuthController', 'showRegister');
 $router->post('/register', 'AuthController', 'register');
+$router->get('/mon_compte', 'AuthController', 'showAccount');
+$router->post('/mon_compte/update', 'AuthController', 'updateAccount');
+$router->post('/mon_compte/delete', 'AuthController', 'deleteAccount');
 
 // ===== Routes Dashboard =====
-$router->get('/dashboard', 'DashboardController', 'index');
+$router->get('/dashboard2', 'DashboardController', 'index'); // dashboard2 devient la route principale
+// $router->get('/dashboard', 'DashboardController', 'index'); // Optionnel : garder pour compatibilité
 $router->get('/api/stats', 'DashboardController', 'getStats');
 $router->get('/getManegesData', 'DashboardController', 'getManegesData');
 $router->get('/api/alerts-count', 'DashboardController', 'getAlertsCount');

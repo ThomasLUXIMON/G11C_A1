@@ -114,6 +114,11 @@ class UserManager extends BaseManager {
         return $stmt->execute(['id' => $id]);
     }
 
+    public function deleteById(int $id): bool {
+        $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE {$this->primaryKey} = :id");
+        return $stmt->execute(['id' => $id]);
+    }
+
     private function mapToUser(array $data): User {
         $expiresAt = null;
         if ($data['reset_token_expires_at']) {

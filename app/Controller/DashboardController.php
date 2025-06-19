@@ -7,12 +7,7 @@ class DashboardController extends BaseController {
     
     public function index(): void {
         $user = $this->requireAuth();
-        
-        // Récupérer les données réelles depuis la base
-        $stats = $this->getDashboardData();
-        
-        // Transmettre les données à la vue
-        $this->render('dashboard', $stats);
+        $this->render('dashboard2', ['user' => $user]);
     }
     
     public function getStats(): void {
@@ -74,5 +69,11 @@ class DashboardController extends BaseController {
         $count = $manegeManager->getPendingAlertsCount();
         
         $this->json(['success' => true, 'count' => $count]);
+    }
+    
+    public function dashboard2(): void {
+        $user = $this->requireAuth();
+        // On peut passer des infos utilisateur si besoin
+        $this->render('dashboard2', ['user' => $user]);
     }
 }

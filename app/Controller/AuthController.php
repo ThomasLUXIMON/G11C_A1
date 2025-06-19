@@ -110,6 +110,74 @@ class AuthController extends BaseController {
         }
     }
 
+    // === Compte utilisateur ===
+    public function showAccount(): void {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            $this->redirect('/login');
+            return;
+        }
+        $this->render('mon_compte', ['user' => $user]);
+    }
+
+    public function updateAccount(): void {
+        if (!$this->isAuthenticated()) {
+            $this->json(['success' => false, 'message' => 'Non authentifié'], 401);
+            return;
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'message' => 'Méthode non autorisée'], 405);
+            return;
+        }
+        $user = $this->getCurrentUser();
+        $userManager = new UserManager();
+        $nom = trim($_POST['nom'] ?? '');
+        $prenom = trim($_POST['prenom'] ?? '');
+        $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+        $tel = trim($_POST['tel'] ?? '');
+        $motdepasse_actuel = $_POST['motdepasse_actuel'] ?? '';
+        $nouveau_mdp = $_POST['nouveau_mdp'] ?? '';
+        $confirmer_mdp = $_POST['confirmer_mdp'] ?? '';
+        // Validation
+        if (!$nom || !$prenom || !$email) {
+            $this->json(['success' => false, 'message' => 'Champs obligatoires manquants.'], 400);
+            return;
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->json(['success' => false, 'message' => 'Email invalide.'], 400);
+            return;
+        }
+        if ($nouveau_mdp || $confirmer_mdp) {
+            if (!$motdepasse_actuel || !password_verify($motdepasse_actuel, $user->getMotDePasse())) {
+                $this->json(['success' => false, 'message' => 'Mot de passe actuel incorrect.'], 400);
+                return;
+            }
+            if ($nouveau_mdp !== $confirmer_mdp) {
+                $this->json(['success' => false, 'message' => 'Les nouveaux mots de passe ne correspondent pas.'], 400);
+                return;
+            }
+            $user->setMotDePasse(password_hash($nouveau_mdp, PASSWORD_DEFAULT));
+        }
+        $user->setNom($nom);
+        $user->setPrenom($prenom);
+        $user->setEmail($email);
+        $user->setTel($tel);
+        $userManager->updateUser($user);
+        $this->json(['success' => true, 'message' => 'Compte mis à jour.']);
+    }
+
+    public function deleteAccount(): void {
+        if (!$this->isAuthenticated()) {
+            $this->json(['success' => false, 'message' => 'Non authentifié'], 401);
+            return;
+        }
+        $user = $this->getCurrentUser();
+        $userManager = new UserManager();
+        $userManager->deleteById($user->getId());
+        $this->destroyUserSession();
+        $this->json(['success' => true, 'message' => 'Compte supprimé', 'redirect' => '/login']);
+    }
+
     // --- Helpers ---
     
     private function createRememberToken(User $user): void {
@@ -129,9 +197,9 @@ class AuthController extends BaseController {
             case 'admin':
             case 'superviseur':
             case 'operateur':
-                return '/G11C/G11C_A1/dashboard';
+                return '/G11C/G11C_A1/dashboard2';
             default:
-                return '/G11C/G11C_A1/dashboard';
+                return '/G11C/G11C_A1/dashboard2';
         }
     }
 }
