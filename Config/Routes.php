@@ -56,7 +56,9 @@ $router->get('/admin/config', 'AdminController', 'config');
 $router->post('/admin/config', 'AdminController', 'updateConfig');
 
 // ===== Routes Capteurs Température =====
-$router->post('/api/sensors/{capteurId}/reading', 'ApiTemperatureController', 'receiveReading');
-$router->get('/api/sensors/{capteurId}/readings', 'ApiTemperatureController', 'getReadings');
+$router->post('/api/sensors/reading', 'ApiTemperatureController', 'receiveReading');
+$router->get('/api/sensors/readings', 'ApiTemperatureController', 'getReadings');
+$router->get('/api/sensors/stats', 'ApiTemperatureController', 'getStats');
+$router->get('/api/sensors/chart', 'ApiTemperatureController', 'getChartData');
 
 return $router;

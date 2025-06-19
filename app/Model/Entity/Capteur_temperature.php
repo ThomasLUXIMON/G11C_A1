@@ -14,7 +14,6 @@ class Capteur_temperature extends Capteur {
     private ?string $unite = '°C';
     private ?DateTime $derniereMesure;
     private ?string $etat = 'inactif';
-    private ?string $capteur_externe_id = null; // ID du capteur physique (TIVA-001, etc.)
     private ?DateTime $created_at = null;
     private ?DateTime $updated_at = null;
     
@@ -28,8 +27,7 @@ class Capteur_temperature extends Capteur {
         ?float $temperature = null,
         ?string $unite = '°C',
         ?DateTime $derniereMesure = null,
-        ?string $etat = 'actif',
-        ?string $capteur_externe_id = null
+        ?string $etat = 'actif'
     ) {
         // Initialisation des propriétés
         $this->id_capteur = $id_capteur;
@@ -39,7 +37,6 @@ class Capteur_temperature extends Capteur {
         $this->unite = $unite;
         $this->derniereMesure = $derniereMesure ?? new DateTime();
         $this->etat = $etat;
-        $this->capteur_externe_id = $capteur_externe_id;
         $this->created_at = new DateTime();
         $this->updated_at = new DateTime();
     }
@@ -60,10 +57,6 @@ class Capteur_temperature extends Capteur {
     
     public function getEtat(): ?string {
         return $this->etat;
-    }
-    
-    public function getCapteurExterneId(): ?string {
-        return $this->capteur_externe_id;
     }
     
     public function getCreatedAt(): ?DateTime {
@@ -99,10 +92,6 @@ class Capteur_temperature extends Capteur {
             $this->etat = $etat;
             $this->updated_at = new DateTime();
         }
-    }
-    
-    public function setCapteurExterneId(?string $capteur_externe_id): void {
-        $this->capteur_externe_id = $capteur_externe_id;
     }
     
     // ===== MÉTHODES SPÉCIFIQUES =====
@@ -183,7 +172,6 @@ class Capteur_temperature extends Capteur {
     public function genererRapport(): array {
         return [
             'id_capteur' => $this->id_capteur,
-            'capteur_externe_id' => $this->capteur_externe_id,
             'id_manege' => $this->id_manege,
             'temperature_actuelle' => $this->getTemperatureFormatee(),
             'temperature_brute' => $this->temperature,
@@ -207,7 +195,6 @@ class Capteur_temperature extends Capteur {
             'unite' => $this->unite,
             'derniere_mesure' => $this->derniereMesure ? $this->derniereMesure->format('Y-m-d H:i:s') : null,
             'etat' => $this->etat,
-            'capteur_externe_id' => $this->capteur_externe_id,
             'created_at' => $this->created_at ? $this->created_at->format('Y-m-d H:i:s') : null,
             'updated_at' => $this->updated_at ? $this->updated_at->format('Y-m-d H:i:s') : null
         ];
@@ -221,7 +208,6 @@ class Capteur_temperature extends Capteur {
         if (isset($data['derniere_mesure']) && $data['derniere_mesure']) {
             $derniereMesure = new DateTime($data['derniere_mesure']);
         }
-        
         $instance = new self(
             $data['id_capteur'] ?? null,
             $data['id_manege'] ?? null,
@@ -229,8 +215,7 @@ class Capteur_temperature extends Capteur {
             $data['temperature'] ?? null,
             $data['unite'] ?? '°C',
             $derniereMesure,
-            $data['etat'] ?? 'actif',
-            $data['capteur_externe_id'] ?? null
+            $data['etat'] ?? 'actif'
         );
         
         // Restaurer les timestamps
@@ -250,7 +235,6 @@ class Capteur_temperature extends Capteur {
     public function toJson(): array {
         return [
             'id' => $this->id_capteur,
-            'capteur_id' => $this->capteur_externe_id,
             'manege_id' => $this->id_manege,
             'temperature' => $this->temperature,
             'unite' => $this->unite,

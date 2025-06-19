@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../../Core/BaseManager.php';
 class CapteurTemperatureManager extends BaseManager {
     protected string $table = 'capteur_temperatures';
     protected array $fillable = [
-        'capteur_id',
+        // 'capteur_id', // supprimé
         'temperature',
         'manege_id',
         'timestamp_mesure'
@@ -19,9 +19,9 @@ class CapteurTemperatureManager extends BaseManager {
     /**
      * Enregistrer une nouvelle lecture de température
      */
-    public function createReading(string $capteurId, float $temperature, ?int $manegeId = null): ?object {
+    public function createReading(float $temperature, ?int $manegeId = null): ?object {
         $data = [
-            'capteur_id' => $capteurId,
+            // 'capteur_id' => $capteurId, // supprimé
             'temperature' => $temperature,
             'manege_id' => $manegeId,
             'timestamp_mesure' => date('Y-m-d H:i:s')
@@ -31,10 +31,10 @@ class CapteurTemperatureManager extends BaseManager {
         $result = $this->create($data);
 
         // Enregistrer aussi dans les logs
-        $this->logReading($capteurId, $temperature, $manegeId);
+        $this->logReading($temperature, $manegeId);
 
         // Vérifier si la température est anormale et créer une alerte si nécessaire
-        $this->checkTemperatureAlert($capteurId, $temperature, $manegeId);
+        $this->checkTemperatureAlert($temperature, $manegeId);
 
         return $result;
     }
@@ -42,16 +42,13 @@ class CapteurTemperatureManager extends BaseManager {
     /**
      * Logger la lecture dans la table logs_capteurs
      */
-    private function logReading(string $capteurId, float $temperature, ?int $manegeId): void {
-        $sql = "INSERT INTO logs_capteurs (capteur_id, type_capteur, manege_id, distance, etat, donnees_brutes, timestamp_mesure) 
-                VALUES (?, 'temperature', ?, ?, ?, ?, ?)";
-        
+    private function logReading(float $temperature, ?int $manegeId): void {
+        $sql = "INSERT INTO logs_capteurs (type_capteur, manege_id, distance, etat, donnees_brutes, timestamp_mesure) 
+                VALUES ('temperature', ?, ?, ?, ?, ?)";
         $etat = $this->getTemperatureStatus($temperature);
         $donneesRaw = json_encode(['temperature' => $temperature, 'unit' => 'celsius']);
-
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
-            $capteurId,
             $manegeId,
             $temperature, // Utiliser le champ distance pour stocker la température
             $etat,
@@ -78,7 +75,7 @@ class CapteurTemperatureManager extends BaseManager {
     /**
      * Vérifier et créer une alerte si la température est anormale
      */
-    private function checkTemperatureAlert(string $capteurId, float $temperature, ?int $manegeId): void {
+    private function checkTemperatureAlert(float $temperature, ?int $manegeId): void {
         $niveau = null;
         $message = null;
 
@@ -100,11 +97,10 @@ class CapteurTemperatureManager extends BaseManager {
             $sql = "INSERT INTO alertes (session_id, type_alerte, niveau, source, message, donnees) 
                     VALUES (?, 'technique', ?, ?, ?, ?)";
 
-            $source = "capteur_temp_{$capteurId}";
+            $source = "capteur_temp";
 
             $donnees = json_encode([
                 'temperature' => $temperature,
-                'capteur_id' => $capteurId,
                 'manege_id' => $manegeId
             ]);
 
@@ -135,28 +131,18 @@ class CapteurTemperatureManager extends BaseManager {
     /**
      * Obtenir les dernières lectures de température
      */
-    public function getLatestReadings(int $limit = 10, ?string $capteurId = null): array {
-        $sql = "SELECT * FROM {$this->table}";
-        $params = [];
-
-        if ($capteurId) {
-            $sql .= " WHERE capteur_id = ?";
-            $params[] = $capteurId;
-        }
-
-        $sql .= " ORDER BY timestamp_mesure DESC LIMIT ?";
-        $params[] = $limit;
-
+    public function getLatestReadings(int $limit = 10): array {
+        $sql = "SELECT * FROM {$this->table} ORDER BY timestamp_mesure DESC LIMIT ?";
+        $params = [$limit];
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Obtenir les statistiques de température
      */
-    public function getTemperatureStats(string $capteurId, string $period = '24h'): array {
+    public function getTemperatureStats(string $period = '24h'): array {
         $dateLimit = match($period) {
             '1h' => date('Y-m-d H:i:s', strtotime('-1 hour')),
             '24h' => date('Y-m-d H:i:s', strtotime('-24 hours')),
@@ -172,19 +158,17 @@ class CapteurTemperatureManager extends BaseManager {
                     MAX(temperature) as max_temp,
                     STDDEV(temperature) as std_dev
                 FROM {$this->table}
-                WHERE capteur_id = ? 
-                AND timestamp_mesure >= ?";
+                WHERE timestamp_mesure >= ?";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$capteurId, $dateLimit]);
-
+        $stmt->execute([$dateLimit]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
      * Obtenir l'historique pour un graphique
      */
-    public function getChartData(string $capteurId, string $period = '24h'): array {
+    public function getChartData(string $period = '24h'): array {
         $dateLimit = match($period) {
             '1h' => date('Y-m-d H:i:s', strtotime('-1 hour')),
             '24h' => date('Y-m-d H:i:s', strtotime('-24 hours')),
@@ -207,14 +191,12 @@ class CapteurTemperatureManager extends BaseManager {
                     MAX(temperature) as max_temp,
                     COUNT(*) as readings_count
                 FROM {$this->table}
-                WHERE capteur_id = ? 
-                AND timestamp_mesure >= ?
+                WHERE timestamp_mesure >= ?
                 GROUP BY period
                 ORDER BY period ASC";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$capteurId, $dateLimit]);
-
+        $stmt->execute([$dateLimit]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

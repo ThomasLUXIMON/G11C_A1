@@ -16,54 +16,38 @@ class ApiTemperatureController extends BaseController {
     }
 
     /**
-     * Endpoint pour recevoir les données d'un capteur
-     * POST /api/sensors/{capteurId}/reading
+     * Endpoint pour recevoir les données de température
+     * POST /api/sensors/reading
      */
-    public function receiveReading(string $capteurId): void {
+    public function receiveReading(): void {
         // Autoriser les requêtes CORS si nécessaire
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type');
-        
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             http_response_code(200);
             exit;
         }
-
-        // Vérifier que c'est une requête POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->jsonResponse(['error' => 'Method not allowed'], 405);
             return;
         }
-
-        // Récupérer les données JSON
         $input = json_decode(file_get_contents('php://input'), true);
-
-        // Valider les données
         if (!isset($input['temperature']) || !is_numeric($input['temperature'])) {
             $this->jsonResponse(['error' => 'Invalid temperature value'], 400);
             return;
         }
-
         $temperature = (float) $input['temperature'];
-        
-        // Valider la plage de température (entre -50 et 100°C)
         if ($temperature < -50 || $temperature > 100) {
             $this->jsonResponse(['error' => 'Temperature out of range'], 400);
             return;
         }
-
-        // Récupérer les données optionnelles
         $manegeId = isset($input['manege_id']) ? (int) $input['manege_id'] : null;
-
         try {
-            // Enregistrer la lecture et recevoir un objet Capteur_temperature
             $capteurTemp = $this->temperatureManager->createReading(
-                $capteurId,
                 $temperature,
                 $manegeId
             );
-
             if ($capteurTemp) {
                 $this->jsonResponse([
                     'success' => true,
@@ -82,23 +66,17 @@ class ApiTemperatureController extends BaseController {
 
     /**
      * Obtenir les dernières lectures
-     * GET /api/sensors/{capteurId}/readings
+     * GET /api/sensors/readings
      */
-    public function getReadings(string $capteurId): void {
+    public function getReadings(): void {
         header('Access-Control-Allow-Origin: *');
-        
         $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
-        $limit = min(max($limit, 1), 100); // Entre 1 et 100
-
+        $limit = min(max($limit, 1), 100);
         try {
-            // Récupérer les capteurs sous forme d'objets Capteur_temperature
-            $capteurs = $this->temperatureManager->getLatestReadings($limit, $capteurId);
-            
-            // Convertir en format JSON
+            $capteurs = $this->temperatureManager->getLatestReadings($limit);
             $readings = array_map(function($capteur) {
                 return $capteur->toJson();
             }, $capteurs);
-            
             $this->jsonResponse([
                 'success' => true,
                 'data' => $readings,
@@ -112,24 +90,19 @@ class ApiTemperatureController extends BaseController {
 
     /**
      * Obtenir les statistiques
-     * GET /api/sensors/{capteurId}/stats
+     * GET /api/sensors/stats
      */
-    public function getStats(string $capteurId): void {
+    public function getStats(): void {
         header('Access-Control-Allow-Origin: *');
-        
         $period = $_GET['period'] ?? '24h';
-        
         if (!in_array($period, ['1h', '24h', '7d', '30d'])) {
             $this->jsonResponse(['error' => 'Invalid period'], 400);
             return;
         }
-
         try {
-            $stats = $this->temperatureManager->getTemperatureStats($capteurId, $period);
-            
+            $stats = $this->temperatureManager->getTemperatureStats($period);
             $this->jsonResponse([
                 'success' => true,
-                'capteur_id' => $capteurId,
                 'period' => $period,
                 'stats' => $stats
             ]);
@@ -141,24 +114,19 @@ class ApiTemperatureController extends BaseController {
 
     /**
      * Obtenir les données pour graphique
-     * GET /api/sensors/{capteurId}/chart
+     * GET /api/sensors/chart
      */
-    public function getChartData(string $capteurId): void {
+    public function getChartData(): void {
         header('Access-Control-Allow-Origin: *');
-        
         $period = $_GET['period'] ?? '24h';
-        
         if (!in_array($period, ['1h', '24h', '7d'])) {
             $this->jsonResponse(['error' => 'Invalid period'], 400);
             return;
         }
-
         try {
-            $chartData = $this->temperatureManager->getChartData($capteurId, $period);
-            
+            $chartData = $this->temperatureManager->getChartData($period);
             $this->jsonResponse([
                 'success' => true,
-                'capteur_id' => $capteurId,
                 'period' => $period,
                 'data' => $chartData
             ]);
