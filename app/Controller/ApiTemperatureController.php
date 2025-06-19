@@ -55,15 +55,13 @@ class ApiTemperatureController extends BaseController {
 
         // Récupérer les données optionnelles
         $manegeId = isset($input['manege_id']) ? (int) $input['manege_id'] : null;
-        $siegeNumero = isset($input['siege_numero']) ? (int) $input['siege_numero'] : null;
 
         try {
             // Enregistrer la lecture et recevoir un objet Capteur_temperature
             $capteurTemp = $this->temperatureManager->createReading(
                 $capteurId,
                 $temperature,
-                $manegeId,
-                $siegeNumero
+                $manegeId
             );
 
             if ($capteurTemp) {

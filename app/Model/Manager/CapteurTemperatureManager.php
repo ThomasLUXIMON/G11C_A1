@@ -13,19 +13,17 @@ class CapteurTemperatureManager extends BaseManager {
         'capteur_id',
         'temperature',
         'manege_id',
-        'siege_numero',
         'timestamp_mesure'
     ];
 
     /**
      * Enregistrer une nouvelle lecture de température
      */
-    public function createReading(string $capteurId, float $temperature, ?int $manegeId = null, ?int $siegeNumero = null): ?object {
+    public function createReading(string $capteurId, float $temperature, ?int $manegeId = null): ?object {
         $data = [
             'capteur_id' => $capteurId,
             'temperature' => $temperature,
             'manege_id' => $manegeId,
-            'siege_numero' => $siegeNumero,
             'timestamp_mesure' => date('Y-m-d H:i:s')
         ];
 
@@ -33,10 +31,10 @@ class CapteurTemperatureManager extends BaseManager {
         $result = $this->create($data);
 
         // Enregistrer aussi dans les logs
-        $this->logReading($capteurId, $temperature, $manegeId, $siegeNumero);
+        $this->logReading($capteurId, $temperature, $manegeId);
 
         // Vérifier si la température est anormale et créer une alerte si nécessaire
-        $this->checkTemperatureAlert($capteurId, $temperature, $manegeId, $siegeNumero);
+        $this->checkTemperatureAlert($capteurId, $temperature, $manegeId);
 
         return $result;
     }
@@ -44,9 +42,9 @@ class CapteurTemperatureManager extends BaseManager {
     /**
      * Logger la lecture dans la table logs_capteurs
      */
-    private function logReading(string $capteurId, float $temperature, ?int $manegeId, ?int $siegeNumero): void {
-        $sql = "INSERT INTO logs_capteurs (capteur_id, type_capteur, manege_id, siege_numero, distance, etat, donnees_brutes, timestamp_mesure) 
-                VALUES (?, 'temperature', ?, ?, ?, ?, ?, ?)";
+    private function logReading(string $capteurId, float $temperature, ?int $manegeId): void {
+        $sql = "INSERT INTO logs_capteurs (capteur_id, type_capteur, manege_id, distance, etat, donnees_brutes, timestamp_mesure) 
+                VALUES (?, 'temperature', ?, ?, ?, ?, ?)";
         
         $etat = $this->getTemperatureStatus($temperature);
         $donneesRaw = json_encode(['temperature' => $temperature, 'unit' => 'celsius']);
@@ -55,7 +53,6 @@ class CapteurTemperatureManager extends BaseManager {
         $stmt->execute([
             $capteurId,
             $manegeId,
-            $siegeNumero,
             $temperature, // Utiliser le champ distance pour stocker la température
             $etat,
             $donneesRaw,
@@ -81,7 +78,7 @@ class CapteurTemperatureManager extends BaseManager {
     /**
      * Vérifier et créer une alerte si la température est anormale
      */
-    private function checkTemperatureAlert(string $capteurId, float $temperature, ?int $manegeId, ?int $siegeNumero): void {
+    private function checkTemperatureAlert(string $capteurId, float $temperature, ?int $manegeId): void {
         $niveau = null;
         $message = null;
 
@@ -104,15 +101,11 @@ class CapteurTemperatureManager extends BaseManager {
                     VALUES (?, 'technique', ?, ?, ?, ?)";
 
             $source = "capteur_temp_{$capteurId}";
-            if ($siegeNumero) {
-                $source .= "_siege_{$siegeNumero}";
-            }
 
             $donnees = json_encode([
                 'temperature' => $temperature,
                 'capteur_id' => $capteurId,
-                'manege_id' => $manegeId,
-                'siege_numero' => $siegeNumero
+                'manege_id' => $manegeId
             ]);
 
             $stmt = $this->db->prepare($sql);

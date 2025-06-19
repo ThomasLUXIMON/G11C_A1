@@ -16,7 +16,6 @@ class Capteur_temperature extends Capteur {
     private ?DateTime $derniereMesure;
     private ?string $etat = 'inactif';
     private ?string $capteur_externe_id = null; // ID du capteur physique (TIVA-001, etc.)
-    private ?int $siege_numero = null;
     private ?DateTime $created_at = null;
     private ?DateTime $updated_at = null;
     
@@ -31,8 +30,7 @@ class Capteur_temperature extends Capteur {
         ?string $unite = '°C',
         ?DateTime $derniereMesure = null,
         ?string $etat = 'actif',
-        ?string $capteur_externe_id = null,
-        ?int $siege_numero = null
+        ?string $capteur_externe_id = null
     ) {
         // Initialisation des propriétés
         $this->id_capteur = $id_capteur;
@@ -43,7 +41,6 @@ class Capteur_temperature extends Capteur {
         $this->derniereMesure = $derniereMesure ?? new DateTime();
         $this->etat = $etat;
         $this->capteur_externe_id = $capteur_externe_id;
-        $this->siege_numero = $siege_numero;
         $this->created_at = new DateTime();
         $this->updated_at = new DateTime();
     }
@@ -68,10 +65,6 @@ class Capteur_temperature extends Capteur {
     
     public function getCapteurExterneId(): ?string {
         return $this->capteur_externe_id;
-    }
-    
-    public function getSiegeNumero(): ?int {
-        return $this->siege_numero;
     }
     
     public function getCreatedAt(): ?DateTime {
@@ -111,10 +104,6 @@ class Capteur_temperature extends Capteur {
     
     public function setCapteurExterneId(?string $capteur_externe_id): void {
         $this->capteur_externe_id = $capteur_externe_id;
-    }
-    
-    public function setSiegeNumero(?int $siege_numero): void {
-        $this->siege_numero = $siege_numero;
     }
     
     // ===== MÉTHODES SPÉCIFIQUES =====
@@ -197,7 +186,6 @@ class Capteur_temperature extends Capteur {
             'id_capteur' => $this->id_capteur,
             'capteur_externe_id' => $this->capteur_externe_id,
             'id_manege' => $this->id_manege,
-            'siege_numero' => $this->siege_numero,
             'temperature_actuelle' => $this->getTemperatureFormatee(),
             'temperature_brute' => $this->temperature,
             'etat' => $this->etat,
@@ -221,7 +209,6 @@ class Capteur_temperature extends Capteur {
             'derniere_mesure' => $this->derniereMesure ? $this->derniereMesure->format('Y-m-d H:i:s') : null,
             'etat' => $this->etat,
             'capteur_externe_id' => $this->capteur_externe_id,
-            'siege_numero' => $this->siege_numero,
             'created_at' => $this->created_at ? $this->created_at->format('Y-m-d H:i:s') : null,
             'updated_at' => $this->updated_at ? $this->updated_at->format('Y-m-d H:i:s') : null
         ];
@@ -244,8 +231,7 @@ class Capteur_temperature extends Capteur {
             $data['unite'] ?? '°C',
             $derniereMesure,
             $data['etat'] ?? 'actif',
-            $data['capteur_externe_id'] ?? null,
-            $data['siege_numero'] ?? null
+            $data['capteur_externe_id'] ?? null
         );
         
         // Restaurer les timestamps
@@ -267,7 +253,6 @@ class Capteur_temperature extends Capteur {
             'id' => $this->id_capteur,
             'capteur_id' => $this->capteur_externe_id,
             'manege_id' => $this->id_manege,
-            'siege_numero' => $this->siege_numero,
             'temperature' => $this->temperature,
             'unite' => $this->unite,
             'etat' => $this->etat,
