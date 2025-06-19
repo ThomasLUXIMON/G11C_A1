@@ -1,9 +1,9 @@
 <?php 
 require_once CORE_PATH . '/Router.php';
 
-$router = new Router();
+$router = new Router('/G11C/G11C_A1');
 
-// ===== Routes d'authentification =====
+// ===== Routes d'authentification (centralisées) =====
 $router->get('/', 'AuthController', 'showLogin');
 $router->get('/login', 'AuthController', 'showLogin');
 $router->post('/login', 'AuthController', 'login');
@@ -14,6 +14,7 @@ $router->post('/register', 'AuthController', 'register');
 // ===== Routes Dashboard =====
 $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/api/stats', 'DashboardController', 'getStats');
+$router->get('/getManegesData', 'DashboardController', 'getManegesData');
 $router->get('/api/alerts-count', 'DashboardController', 'getAlertsCount');
 
 // ===== Routes Manèges =====

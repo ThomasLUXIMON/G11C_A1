@@ -96,4 +96,3 @@ class Router {
         include APP_PATH . '/Views/errors/404.php';
     }
 }
-

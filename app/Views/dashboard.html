@@ -8,32 +8,72 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  
   <style>
     body {
       background: linear-gradient(135deg, #e0f7fa, #ffffff);
       font-family: 'Nunito', sans-serif;
       color: #2d3748;
       min-height: 100vh;
+      display: flex;
     }
+
+    .sidebar {
+      width: 220px;
+      background: #2a69ac;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .sidebar h4 {
+      margin-bottom: 30px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      padding: 10px;
+      margin-bottom: 10px;
+      display: block;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .sidebar a:hover {
+      background-color: #1e4e8c;
+    }
+
+    .main-content {
+      flex-grow: 1;
+      padding: 20px;
+    }
+
     .navbar {
       background: linear-gradient(to right, #2a69ac, #4dabf7);
-      padding: 8px;
-      justify-content: center;
-      border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 10px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .navbar-brand {
+
+    .navbar .navbar-brand {
       color: white !important;
       font-size: 1.5rem;
       font-weight: bold;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
     }
-    .nav-link {
-      color: white !important;
+
+    .user-info {
+      color: white;
+      font-size: 1rem;
     }
-    .container {
-      padding: 20px;
-    }
+
     .title {
       text-align: center;
       font-size: 2rem;
@@ -41,71 +81,184 @@
       color: #2a69ac;
       margin-bottom: 30px;
     }
+
     .card {
       border: none;
       border-radius: 16px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       margin-bottom: 20px;
       padding: 20px;
+      transition: transform 0.2s;
     }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
     .card h5 {
       color: #2a69ac;
+      margin-bottom: 15px;
+    }
+
+    .card .status-active {
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    .card .status-inactive {
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .alert {
+      border-radius: 8px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #6c757d;
+    }
+
+    /* Ajustement du graphique */
+    .chart-container {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin: 20px auto 0 auto;
+      height: 500px;
+      max-width: 900px;
+      position: relative;
+
+      display: flex;           /* centrage vertical et horizontal */
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      box-sizing: border-box;  /* padding inclus dans la taille */
+      overflow: hidden;        /* masque dépassements éventuels */
+    }
+
+    #passengersChart {
+      height: 100% !important;
+      width: 100% !important;
+      max-height: 460px; /* un peu moins que container pour éviter débordement */
     }
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg">
-    <a class="navbar-brand" href="/dashboard"><i class="fas fa-ferris-wheel"></i> Système de Gestion de Manège</a>
-    <div class="ms-auto">
-      <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
-    </div>
-  </nav>
+  <div class="sidebar">
+    <h4><i class="fas fa-user-cog"></i> Menu</h4>
+    <a href="dashboard.html"><i class="fas fa-home"></i> Accueil</a>
+    <a href="gestion_manege.html"><i class="fas fa-tools"></i> Gestion des Manèges</a> <!-- Ajouté -->
+    <a href="mon_compte.html"><i class="fas fa-user"></i> Mon Compte</a>
+    <a href="register.html"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+  </div>
 
-  <div class="container">
+  <div class="main-content">
+    <nav class="navbar">
+      <span class="navbar-brand"><i class="fas fa-ferris-wheel"></i> Système de Gestion de Manège</span>
+      <span class="user-info"><i class="fas fa-user-circle"></i> Jean Dupont</span>
+    </nav>
+
     <h1 class="title">Tableau de Bord - Tous les manèges</h1>
 
-    <div class="row" id="all-manege-details">
-      <!-- Cartes des manèges seront injectées ici -->
+    <div id="loading" class="loading">
+      <i class="fas fa-spinner fa-spin"></i> Chargement des données...
     </div>
 
-    <h2 class="mt-5 mb-3" style="color:#2a69ac;">Nombre de passagers et Température par manège</h2>
-    <canvas id="passengersChart" style="max-width: 700px;"></canvas>
+    <div id="error-alert" class="alert alert-danger" style="display: none;">
+      <i class="fas fa-exclamation-triangle"></i> <span id="error-message"></span>
+    </div>
+
+    <div id="info-alert" class="alert alert-info" style="display: none;">
+      <i class="fas fa-info-circle"></i> <span id="info-message"></span>
+    </div>
+
+    <div class="row" id="all-manege-details"></div>
+
+    <div class="chart-container" id="chart-container" style="display: none;">
+      <h2 class="mb-3" style="color:#2a69ac;">Nombre de passagers et Température</h2>
+      <canvas id="passengersChart"></canvas>
+    </div>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const maneges = [
-      { id: 1, nom: "Grand 8" },
-      { id: 2, nom: "Tonneaux Volants" },
-      { id: 3, nom: "Train Fantôme" },
-      { id: 4, nom: "Chaises Volantes" }
-    ];
+    let chart = null;
 
-    // Ajout de la température (°C) pour chaque manège
-    const manegesDetails = {
-      1: { actif: true, nb_passagers: 15, temperature: 25.6 },
-      2: { actif: false, nb_passagers: 0, temperature: 22.3 },
-      3: { actif: true, nb_passagers: 6, temperature: 24.1 },
-      4: { actif: true, nb_passagers: 12, temperature: 26.0 }
-    };
+    function afficherLoading(show) {
+      $('#loading').toggle(show);
+    }
 
-    function afficherTousLesManeges() {
+    function afficherErreur(message) {
+      $('#error-message').text(message);
+      $('#error-alert').show();
+      setTimeout(() => {
+        $('#error-alert').fadeOut();
+      }, 5000);
+    }
+
+    function afficherInfo(message) {
+      $('#info-message').text(message);
+      $('#info-alert').show();
+      setTimeout(() => {
+        $('#info-alert').fadeOut();
+      }, 3000);
+    }
+
+    function chargerDonneesManeges() {
+      return $.ajax({
+        url: 'get_dashboard_data.php', 
+        method: 'GET',
+        dataType: 'json',
+        timeout: 10000,
+        cache: false
+      });
+    }
+
+    function afficherTousLesManeges(maneges) {
       const container = $('#all-manege-details');
       container.empty();
 
+      if (!maneges || maneges.length === 0) {
+        container.append(`
+          <div class="col-12">
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-triangle"></i> Aucun manège trouvé dans la base de données.
+            </div>
+          </div>
+        `);
+        return;
+      }
+
       maneges.forEach(manege => {
-        const info = manegesDetails[manege.id];
-        const statut = info.actif ? 'Actif ✅' : 'Inactif ❌';
+        const id = manege.id || 'N/A';
+        const nom = manege.nom_manege || 'Manège sans nom';
+        const statut = manege.statut || 'inconnu';
+        const nbPassagers = parseInt(manege.nb_passagers) || 0;
+        const temperature = parseFloat(manege.temperature) || 0;
+        
+        let statutHtml = '';
+        if (statut.toLowerCase() === 'actif') {
+          statutHtml = '<span class="status-active">Actif ✅</span>';
+        } else if (statut.toLowerCase() === 'inactif') {
+          statutHtml = '<span class="status-inactive">Inactif ❌</span>';
+        } else {
+          statutHtml = `<span class="text-muted">${statut} ❓</span>`;
+        }
 
         const cardHtml = `
           <div class="col-md-6 col-lg-4">
             <div class="card">
-              <h5>${manege.nom}</h5>
-              <p><strong>Statut :</strong> ${statut}</p>
-              <p><strong>Nombre de passagers :</strong> ${info.nb_passagers}</p>
-              <p><strong>Température :</strong> ${info.temperature.toFixed(1)} °C</p>
+              <h5><i class="fas fa-ferris-wheel"></i> ${nom}</h5>
+              <p><strong>ID :</strong> ${id}</p>
+              <p><strong>Statut :</strong> ${statutHtml}</p>
+              <p><strong>Nombre de passagers :</strong> <span class="badge bg-primary">${nbPassagers}</span></p>
+              <p><strong>Température :</strong> <span class="badge bg-warning text-dark">${temperature.toFixed(1)} °C</span></p>
             </div>
           </div>
         `;
@@ -113,13 +266,34 @@
       });
     }
 
-    function afficherGraphique() {
-      const labels = maneges.map(m => m.nom);
-      const nbPassagers = maneges.map(m => manegesDetails[m.id].nb_passagers);
-      const temperatures = maneges.map(m => manegesDetails[m.id].temperature);
+    function afficherGraphique(maneges) {
+      if (!maneges || maneges.length === 0) {
+        $('#chart-container').hide();
+        return;
+      }
+
+      const validManeges = maneges.filter(m => 
+        m.nom_manege && 
+        !isNaN(parseInt(m.nb_passagers)) && 
+        !isNaN(parseFloat(m.temperature))
+      );
+
+      if (validManeges.length === 0) {
+        $('#chart-container').hide();
+        afficherInfo('Aucune donnée valide pour afficher le graphique');
+        return;
+      }
+
+      const labels = validManeges.map(m => m.nom_manege);
+      const nbPassagers = validManeges.map(m => parseInt(m.nb_passagers) || 0);
+      const temperatures = validManeges.map(m => parseFloat(m.temperature) || 0);
 
       const ctx = document.getElementById('passengersChart').getContext('2d');
-      new Chart(ctx, {
+      if (chart) {
+        chart.destroy();
+      }
+
+      chart = new Chart(ctx, {
         data: {
           labels: labels,
           datasets: [
@@ -149,25 +323,32 @@
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           interaction: {
             mode: 'index',
             intersect: false,
           },
+          plugins: {
+            title: {
+              display: true,
+              text: 'Données des manèges en temps réel'
+            },
+            legend: {
+              display: true,
+              position: 'top'
+            }
+          },
           scales: {
             y: {
-              type: 'linear',
-              position: 'left',
               beginAtZero: true,
               title: {
                 display: true,
                 text: 'Nombre de passagers'
-              },
-              ticks: { stepSize: 1 }
+              }
             },
             y1: {
-              type: 'linear',
-              position: 'right',
               beginAtZero: false,
+              position: 'right',
               title: {
                 display: true,
                 text: 'Température (°C)'
@@ -176,24 +357,74 @@
                 drawOnChartArea: false
               }
             }
-          },
-          plugins: {
-            legend: {
-              position: 'top',
-            },
-            tooltip: {
-              enabled: true,
-              mode: 'nearest',
-              intersect: false,
-            }
           }
         }
       });
+
+      $('#chart-container').show();
+    }
+
+    function initialiserDashboard() {
+      afficherLoading(true);
+      $('#error-alert').hide();
+      $('#info-alert').hide();
+
+      chargerDonneesManeges()
+        .done(response => {
+          afficherLoading(false);
+          
+          if (response.success) {
+            if (response.data && response.data.length > 0) {
+              afficherTousLesManeges(response.data);
+              afficherGraphique(response.data);
+              afficherInfo(`${response.data.length} manège(s) chargé(s) avec succès`);
+            } else {
+              afficherTousLesManeges([]);
+              afficherInfo('Aucun manège trouvé');
+            }
+          } else {
+            afficherErreur(response.error || 'Erreur inconnue lors du chargement');
+            afficherTousLesManeges([]);
+          }
+        })
+        .fail((xhr, status, error) => {
+          afficherLoading(false);
+          let errorMessage = 'Impossible de joindre le serveur';
+          
+          if (xhr.status === 404) {
+            errorMessage = 'Fichier API non trouvé (404)';
+          } else if (xhr.status === 500) {
+            errorMessage = 'Erreur serveur (500)';
+          } else if (status === 'timeout') {
+            errorMessage = 'Délai d\'attente dépassé';
+          } else if (status === 'parsererror') {
+            errorMessage = 'Erreur de format de données';
+          }
+          
+          afficherErreur(errorMessage + ' - ' + error);
+          afficherTousLesManeges([]);
+        });
+    }
+
+    function demarrerAutoRefresh() {
+      setInterval(() => {
+        console.log('Auto-refresh des données...');
+        chargerDonneesManeges()
+          .done(response => {
+            if (response.success && response.data) {
+              afficherTousLesManeges(response.data);
+              afficherGraphique(response.data);
+            }
+          })
+          .fail(() => {
+            console.warn('Échec de l\'auto-refresh');
+          });
+      }, 30000);
     }
 
     $(document).ready(() => {
-      afficherTousLesManeges();
-      afficherGraphique();
+      initialiserDashboard();
+      demarrerAutoRefresh();
     });
   </script>
 </body>

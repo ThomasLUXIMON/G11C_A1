@@ -1,4 +1,9 @@
 <?php 
+require_once __DIR__ . '/../Config/database.php';
+require_once __DIR__ . '/View.php';
+require_once __DIR__ . '/../app/Model/Manager/UserManager.php';
+require_once __DIR__ . '/../app/Model/Entity/User.php';
+
 abstract class BaseController {
     protected View $view;
     protected PDO $db;
@@ -61,9 +66,7 @@ abstract class BaseController {
     protected function getCurrentUser(): ?User {
         if (!isset($_SESSION['user_id'])) {
             return null;
-        }
-
-        $userManager = new UserManager($this->db);
+        }        $userManager = new UserManager();
         return $userManager->findById($_SESSION['user_id']);
     }
 

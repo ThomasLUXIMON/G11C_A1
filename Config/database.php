@@ -5,33 +5,33 @@
  */
 
 // Configuration pour AlwaysData
-define('DB_HOST', 'mysql-appg1d.alwaysdata.net');
-define('DB_NAME', 'appg1d_projetcommun');
-define('DB_USER', 'appg1d_groupec');
-define('DB_PASS', 'Dev$G11C');
-define('DB_PORT', 3306);
-define('DB_CHARSET', 'utf8mb4');
+if (!defined('DB_HOST')) define('DB_HOST', 'mysql-appg1d.alwaysdata.net');
+if (!defined('DB_NAME')) define('DB_NAME', 'appg1d_projetcommun');
+if (!defined('DB_USER')) define('DB_USER', 'appg1d_groupec');
+if (!defined('DB_PASS')) define('DB_PASS', 'Dev$G11C');
+if (!defined('DB_PORT')) define('DB_PORT', 3306);
+if (!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
 
 
 // Configuration série pour TIVA C
-define('SERIAL_PORT', '/dev/ttyACM0'); // Linux
+if (!defined('SERIAL_PORT')) define('SERIAL_PORT', '/dev/ttyACM0'); // Linux
 // define('SERIAL_PORT', 'COM3'); // Windows
-define('BAUD_RATE', 115200);
+if (!defined('BAUD_RATE')) define('BAUD_RATE', 115200);
 
 // Configuration des fichiers
-define('DATA_FILE', __DIR__ . '/data/seat_data.json');
-define('LOG_FILE', __DIR__ . '/logs/seat_log.txt');
+if (!defined('DATA_FILE')) define('DATA_FILE', __DIR__ . '/data/seat_data.json');
+if (!defined('LOG_FILE')) define('LOG_FILE', __DIR__ . '/logs/seat_log.txt');
 
 // Configuration API
-define('API_KEY', '');
+if (!defined('API_KEY')) define('API_KEY', '');
 
 // Configuration système
-define('SEUIL_DETECTION', 25.0); // Distance en cm pour détecter une personne
-define('TEMPS_ALERTE_OCCUPATION', 30); // Secondes avant alerte
-define('INTERVAL_VERIFICATION', 5); // Secondes entre vérifications
+if (!defined('SEUIL_DETECTION')) define('SEUIL_DETECTION', 25.0); // Distance en cm pour détecter une personne
+if (!defined('TEMPS_ALERTE_OCCUPATION')) define('TEMPS_ALERTE_OCCUPATION', 30); // Secondes avant alerte
+if (!defined('INTERVAL_VERIFICATION')) define('INTERVAL_VERIFICATION', 5); // Secondes entre vérifications
 
 // Mode debug
-define('DEBUG_MODE', false);
+if (!defined('DEBUG_MODE')) define('DEBUG_MODE', false);
 
 // Timezone
 date_default_timezone_set('Europe/Paris');
