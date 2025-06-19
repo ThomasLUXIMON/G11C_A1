@@ -2,7 +2,6 @@
 /**
  * ApiTemperatureController.php
  * Contrôleur API pour recevoir les données de température
- * À placer dans : app/Controller/
  */
 
 require_once __DIR__ . '/../../Core/BaseController.php';
