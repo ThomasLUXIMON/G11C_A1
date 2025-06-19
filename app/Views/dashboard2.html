@@ -151,6 +151,7 @@
   <div class="sidebar">
     <h4><i class="fas fa-user-cog"></i> Menu</h4>
     <a href="/G11C/G11C_A1/dashboard2"><i class="fas fa-home"></i> Accueil</a>
+    <a href="/G11C/G11C_A1/gestion_manege"><i class="fas fa-cogs"></i> Gestion des manèges</a>
     <a href="/G11C/G11C_A1/mon_compte"><i class="fas fa-user"></i> Mon Compte</a>
     <a href="/G11C/G11C_A1/logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
   </div>
@@ -160,6 +161,10 @@
       <span class="navbar-brand"><i class="fas fa-ferris-wheel"></i> Système de Gestion de Manège</span>
       <span class="user-info"><i class="fas fa-user-circle"></i> <?= htmlspecialchars($user->getPrenom() . ' ' . $user->getNom()) ?></span>
     </nav>
+    <div class="text-end mb-3">
+      <button id="btn-gestion-manege" class="btn btn-secondary"><i class="fas fa-cogs"></i> Gestion des manèges</button>
+    </div>
+    <div id="gestion-manege-container" style="display:none;"></div>
 
     <h1 class="title">Tableau de Bord - Tous les manèges</h1>
 

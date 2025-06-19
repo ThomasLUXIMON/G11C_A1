@@ -54,6 +54,10 @@
 
 session_start();
 
+// Debug temporaire pour développement JSON/erreurs AJAX
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Configuration des chemins
 define('ROOT_PATH', __DIR__);
 define('APP_PATH', ROOT_PATH . '/app');

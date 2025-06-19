@@ -76,4 +76,9 @@ class DashboardController extends BaseController {
         // On peut passer des infos utilisateur si besoin
         $this->render('dashboard2', ['user' => $user]);
     }
+    
+    public function gestionManege(): void {
+        $user = $this->requireAuth();
+        $this->render('gestion_manege', ['user' => $user]);
+    }
 }

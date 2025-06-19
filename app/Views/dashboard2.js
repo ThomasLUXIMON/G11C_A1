@@ -237,3 +237,17 @@ $(document).ready(() => {
   initialiserDashboard();
   demarrerAutoRefresh();
 });
+
+$(document).on('click', '#btn-gestion-manege', function() {
+  const container = $('#gestion-manege-container');
+  if (container.is(':visible')) {
+    container.slideUp();
+    return;
+  }
+  container.slideDown();
+  // Charger le JS de gestion dynamiquement si besoin
+  if (!container.data('loaded')) {
+    $.getScript('/G11C/G11C_A1/app/Views/gestion_manege.js');
+    container.data('loaded', true);
+  }
+});

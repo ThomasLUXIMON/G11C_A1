@@ -365,4 +365,20 @@ class ManegeManager extends BaseManager {
         
         return parent::update($id, $data);
     }
+
+    /**
+     * Insère un nouveau manège dans la base de données
+     */
+    public function insert(Manege $manege): bool {
+        $stmt = $this->db->prepare("INSERT INTO {$this->table} (nom, type, capacite_max, statut, duree_tour, age_minimum, taille_minimum) VALUES (:nom, :type, :capacite_max, :statut, :duree_tour, :age_minimum, :taille_minimum)");
+        return $stmt->execute([
+            'nom' => $manege->getNom(),
+            'type' => $manege->getType(),
+            'capacite_max' => $manege->getCapaciteMax(),
+            'statut' => $manege->getStatut(),
+            'duree_tour' => $manege->getDureeTour(),
+            'age_minimum' => $manege->getAgeMinimum(),
+            'taille_minimum' => $manege->getTailleMinimum()
+        ]);
+    }
 }
