@@ -76,8 +76,10 @@ $(function() {
         type: $('#type').val(),
         statut: $('#statut').val()
       };
+      const putUrl = '/G11C/G11C_A1/maneges/' + id;
+      console.log('PUT URL:', putUrl, 'Data:', dataObj);
       $.ajax({
-        url: '/G11C/G11C_A1/maneges/' + id,
+        url: putUrl,
         method: 'PUT',
         contentType: 'application/json',
         data: JSON.stringify(dataObj),
