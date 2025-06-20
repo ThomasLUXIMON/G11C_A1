@@ -1,5 +1,5 @@
 <?php
-// AuthController.php : centralise login, register, logout
+// AuthController.php centralise login, register, logout
 
 require_once __DIR__ . '/../../Core/BaseController.php';
 require_once __DIR__ . '/../Model/Manager/UserManager.php';

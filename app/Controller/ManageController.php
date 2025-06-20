@@ -1,5 +1,4 @@
 <?php
-// ManageController.php : gestion CRUD des manèges via MVC
 require_once __DIR__ . '/../../Core/BaseController.php';
 require_once __DIR__ . '/../Model/Manager/ManegeManager.php';
 require_once __DIR__ . '/../Model/Entity/Manege.php';
