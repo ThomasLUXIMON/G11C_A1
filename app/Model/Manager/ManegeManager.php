@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../Core/BaseManager.php';
 require_once __DIR__ . '/../Entity/Manege.php';
+require_once __DIR__ . '/../../Helpers/Security.php';
 
 /**
  * Classe ManageManager
@@ -75,6 +76,8 @@ class ManegeManager extends BaseManager {
      * Trouve les manèges par statut
      */
     public function findByStatus(string $statut): array {
+        // Sécurisation de l'entrée pour usage SQL (exemple d'utilisation)
+        $statut = sanitize_sql_input($statut);
         return $this->findAll(['statut' => $statut], 'nom ASC');
     }
     
