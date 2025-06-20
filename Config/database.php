@@ -1,16 +1,17 @@
 <?php
+require_once __DIR__ . '/env.php';
 /**
  * Configuration de la base de données AlwaysData
  * config/database.php
  */
 
-// Configuration pour AlwaysData
-if (!defined('DB_HOST')) define('DB_HOST', 'mysql-appg1d.alwaysdata.net');
-if (!defined('DB_NAME')) define('DB_NAME', 'appg1d_projetcommun');
-if (!defined('DB_USER')) define('DB_USER', 'appg1d_groupec');
-if (!defined('DB_PASS')) define('DB_PASS', 'Dev$G11C');
-if (!defined('DB_PORT')) define('DB_PORT', 3306);
-if (!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
+// Utilisation des variables d'environnement via $_ENV
+if (!defined('DB_HOST')) define('DB_HOST', $_ENV['DB_HOST'] ?? 'mysql-appg1d.alwaysdata.net');
+if (!defined('DB_NAME')) define('DB_NAME', $_ENV['DB_NAME'] ?? 'appg1d_projetcommun');
+if (!defined('DB_USER')) define('DB_USER', $_ENV['DB_USER'] ?? 'appg1d_groupec');
+if (!defined('DB_PASS')) define('DB_PASS', $_ENV['DB_PASS'] ?? 'Dev$G11C');
+if (!defined('DB_PORT')) define('DB_PORT', $_ENV['DB_PORT'] ?? 3306);
+if (!defined('DB_CHARSET')) define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
 
 
 // Configuration série pour TIVA C
@@ -139,23 +140,6 @@ class DatabaseSchema {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             INDEX idx_statut (statut)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
-        
-        $db->exec($sql);
-        
-        // Table des opérateurs
-        $sql = "CREATE TABLE IF NOT EXISTS operateurs (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            nom VARCHAR(100) NOT NULL,
-            prenom VARCHAR(100) NOT NULL,
-            email VARCHAR(150) UNIQUE NOT NULL,
-            mot_de_passe VARCHAR(255) NOT NULL,
-            role ENUM('operateur', 'superviseur', 'admin') DEFAULT 'operateur',
-            actif BOOLEAN DEFAULT TRUE,
-            derniere_connexion DATETIME,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            INDEX idx_email (email),
-            INDEX idx_role (role)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
         
         $db->exec($sql);
