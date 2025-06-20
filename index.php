@@ -20,6 +20,7 @@
  * │   │   ├── AuthController.php
  * │   │   ├── DashboardController.php
  * │   │   ├── ManageController.php
+ * │   │   ├── ApiTemperatureController.php
  * │   ├── Model/
  * │   │   ├──Entity/
  * │   │   │   ├── User.php
@@ -28,12 +29,13 @@
  * |   |   |   └── Capteur_temperature.php
  * │   │   └──Manager/
  * |   |      ├── UserManager.php
+ * |   |      ├── CapteurTemperatureManager.php
  * |   |      └── ManegeManager.php
  * │   └── Views/
  * │       ├── login.html
- * │       ├── dashboard.html
+ * │       ├── dashboard2.html
  * │       ├── login.js
- * │       ├── dashboard.js
+ * │       ├── dashboard2.js
  * │       ├── register.js
  * |       └── register.html
  * 
