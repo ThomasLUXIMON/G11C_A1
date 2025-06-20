@@ -20,3 +20,12 @@ function sanitize_sql_input($input, $pdo = null) {
     }
     return addslashes($input);
 }
+
+/**
+ * Sécurise une chaîne pour affichage HTML (anti-XSS)
+ * @param string $str
+ * @return string
+ */
+function escape_html($str) {
+    return htmlspecialchars($str, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
