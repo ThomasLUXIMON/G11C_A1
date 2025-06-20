@@ -111,8 +111,9 @@ class ManegeManager extends BaseManager {
         if (!in_array($nouveauStatut, $statutsValides)) {
             throw new InvalidArgumentException("Statut invalide: {$nouveauStatut}");
         }
-        
-        return $this->update($id, ['statut' => $nouveauStatut]);
+        $sql = "UPDATE {$this->table} SET statut = :statut WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute(['statut' => $nouveauStatut, 'id' => $id]);
     }
     
     /**
@@ -263,7 +264,14 @@ class ManegeManager extends BaseManager {
     public function getRealTimeStatus(): array {
         $sql = "SELECT m.id, m.nom, m.type, m.statut, m.capacite_max,
                        COUNT(s.id) as sessions_actives,
-                       MAX(s.heure_debut) as derniere_activite
+                       MAX(s.heure_debut) as derniere_activite,
+                       (
+                         SELECT ct.temperature
+                         FROM capteur_temperatures ct
+                         WHERE ct.manege_id = m.id
+                         ORDER BY ct.timestamp_mesure DESC
+                         LIMIT 1
+                       ) as temperature
                 FROM {$this->table} m
                 LEFT JOIN sessions_manege s ON m.id = s.manege_id 
                     AND s.statut IN ('preparation', 'en_cours')

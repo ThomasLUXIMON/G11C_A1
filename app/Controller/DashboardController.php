@@ -81,4 +81,25 @@ class DashboardController extends BaseController {
         $user = $this->requireAuth();
         $this->render('gestion_manege', ['user' => $user]);
     }
+    
+    public function startManegeSession(): void {
+        $this->requireAuth();
+        $input = json_decode(file_get_contents('php://input'), true);
+        $manegeId = $input['manege_id'] ?? null;
+        if (!$manegeId) {
+            $this->json(['success' => false, 'message' => 'ID manège manquant'], 400);
+            return;
+        }
+        require_once __DIR__ . '/../Model/Manager/SessionHelper.php';
+        try {
+            \SessionHelper::startSessionAndActivateManege((int)$manegeId);
+            $this->json(['success' => true, 'message' => 'Manège lancé et activé']);
+        } catch (Exception $e) {
+            $this->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
 }

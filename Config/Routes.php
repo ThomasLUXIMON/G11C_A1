@@ -21,6 +21,7 @@ $router->get('/api/stats', 'DashboardController', 'getStats');
 $router->get('/getManegesData', 'DashboardController', 'getManegesData');
 $router->get('/api/alerts-count', 'DashboardController', 'getAlertsCount');
 $router->get('/gestion_manege', 'DashboardController', 'gestionManege');
+$router->post('/start-manege-session', 'DashboardController', 'startManegeSession');
 
 // ===== Routes Manèges =====
 $router->get('/maneges', 'ManageController', 'index');

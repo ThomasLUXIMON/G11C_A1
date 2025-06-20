@@ -74,6 +74,7 @@ function afficherTousLesManeges(maneges) {
           <p><strong>Statut :</strong> ${statutHtml}</p>
           <p><strong>Nombre de passagers :</strong> <span class="badge bg-primary">${nbPassagers}</span></p>
           <p><strong>Température :</strong> <span class="badge bg-warning text-dark">${temperature.toFixed(1)} °C</span></p>
+          <button class="btn btn-success btn-sm mt-2 btn-lancer-manege" data-id="${id}"><i class="fas fa-play"></i> Lancer</button>
         </div>
       </div>
     `;
@@ -250,4 +251,33 @@ $(document).on('click', '#btn-gestion-manege', function() {
     $.getScript('/G11C/G11C_A1/app/Views/gestion_manege.js');
     container.data('loaded', true);
   }
+});
+
+// Lancer un manège (démarrer une session)
+$(document).on('click', '.btn-lancer-manege', function() {
+  const manegeId = $(this).data('id');
+  if (!manegeId) return;
+  $.ajax({
+    url: `/G11C/G11C_A1/start-manege-session`,
+    method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ manege_id: manegeId }),
+    dataType: 'json',
+    success: function(resp) {
+      if (resp.success) {
+        afficherInfo('Session démarrée pour le manège #' + manegeId);
+        chargerDonneesManeges().done(response => {
+          if (response.success && response.maneges) {
+            afficherTousLesManeges(response.maneges);
+            afficherGraphique(response.maneges);
+          }
+        });
+      } else {
+        afficherErreur(resp.message || 'Erreur lors du démarrage de la session');
+      }
+    },
+    error: function(xhr) {
+      afficherErreur('Erreur serveur lors du démarrage de la session');
+    }
+  });
 });
