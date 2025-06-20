@@ -271,7 +271,12 @@ class ManegeManager extends BaseManager {
                          WHERE ct.manege_id = m.id
                          ORDER BY ct.timestamp_mesure DESC
                          LIMIT 1
-                       ) as temperature
+                       ) as temperature,
+                       (
+                         SELECT COALESCE(SUM(s2.nombre_passagers), 0)
+                         FROM sessions_manege s2
+                         WHERE s2.manege_id = m.id AND s2.statut = 'en_cours'
+                       ) as nombre_passagers
                 FROM {$this->table} m
                 LEFT JOIN sessions_manege s ON m.id = s.manege_id 
                     AND s.statut IN ('preparation', 'en_cours')

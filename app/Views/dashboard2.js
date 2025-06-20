@@ -55,7 +55,7 @@ function afficherTousLesManeges(maneges) {
     const id = manege.id || 'N/A';
     const nom = manege.nom_manege || manege.nom || 'Manège sans nom';
     const statut = manege.statut || 'inconnu';
-    const nbPassagers = parseInt(manege.nb_passagers) || 0;
+    const nbPassagers = (typeof manege.nombre_passagers !== 'undefined' && manege.nombre_passagers !== null) ? parseInt(manege.nombre_passagers) : 0;
     const temperature = parseFloat(manege.temperature) || 0;
     let statutHtml = '';
     if (statut.toLowerCase() === 'actif') {
@@ -72,7 +72,7 @@ function afficherTousLesManeges(maneges) {
           <p><strong>Nom du manège :</strong> ${nom}</p>
           <p><strong>ID :</strong> ${id}</p>
           <p><strong>Statut :</strong> ${statutHtml}</p>
-          <p><strong>Nombre de passagers :</strong> <span class="badge bg-primary">${nbPassagers}</span></p>
+          <p><strong>Nombre de passagers (session) :</strong> <span class="badge bg-primary">${nbPassagers}</span></p>
           <p><strong>Température :</strong> <span class="badge bg-warning text-dark">${temperature.toFixed(1)} °C</span></p>
           <button class="btn btn-success btn-sm mt-2 btn-lancer-manege" data-id="${id}"><i class="fas fa-play"></i> Lancer</button>
         </div>
@@ -100,8 +100,9 @@ function afficherGraphique(maneges) {
     return;
   }
   const validManeges = maneges.filter(m =>
-    m.nom_manege &&
-    !isNaN(parseInt(m.nb_passagers)) &&
+    (m.nom_manege || m.nom) &&
+    !isNaN(parseInt(m.nombre_passagers)) &&
+    m.nombre_passagers !== null &&
     !isNaN(parseFloat(m.temperature))
   );
   if (validManeges.length === 0) {
@@ -109,8 +110,8 @@ function afficherGraphique(maneges) {
     afficherInfo('Aucune donnée valide pour afficher le graphique');
     return;
   }
-  const labels = validManeges.map(m => m.nom_manege);
-  const nbPassagers = validManeges.map(m => parseInt(m.nb_passagers) || 0);
+  const labels = validManeges.map(m => m.nom_manege || m.nom);
+  const nbPassagers = validManeges.map(m => parseInt(m.nombre_passagers) || 0);
   const temperatures = validManeges.map(m => parseFloat(m.temperature) || 0);
   const ctx = document.getElementById('passengersChart').getContext('2d');
   if (chart) {
@@ -122,7 +123,7 @@ function afficherGraphique(maneges) {
       datasets: [
         {
           type: 'bar',
-          label: 'Nombre de passagers',
+          label: 'Nombre de passagers (session)',
           data: nbPassagers,
           backgroundColor: 'rgba(42, 105, 172, 0.7)',
           borderColor: 'rgba(42, 105, 172, 1)',
@@ -166,7 +167,7 @@ function afficherGraphique(maneges) {
           beginAtZero: true,
           title: {
             display: true,
-            text: 'Nombre de passagers'
+            text: 'Nombre de passagers (session)'
           }
         },
         y1: {
@@ -265,19 +266,29 @@ $(document).on('click', '.btn-lancer-manege', function() {
     dataType: 'json',
     success: function(resp) {
       if (resp.success) {
-        afficherInfo('Session démarrée pour le manège #' + manegeId);
-        chargerDonneesManeges().done(response => {
-          if (response.success && response.maneges) {
-            afficherTousLesManeges(response.maneges);
-            afficherGraphique(response.maneges);
-          }
-        });
+        afficherInfo(`Manège ${manegeId} lancé avec succès`);
+        // Actualiser les données après un court délai
+        setTimeout(() => {
+          chargerDonneesManeges()
+            .done(response => {
+              if (response.success && response.maneges) {
+                afficherTousLesManeges(response.maneges);
+                afficherGraphique(response.maneges);
+              }
+            });
+        }, 5000);
       } else {
-        afficherErreur(resp.message || 'Erreur lors du démarrage de la session');
+        afficherErreur(`Erreur lors du lancement du manège : ${resp.message}`);
       }
     },
-    error: function(xhr) {
-      afficherErreur('Erreur serveur lors du démarrage de la session');
+    error: function(xhr, status, error) {
+      let errorMessage = 'Erreur de communication avec le serveur';
+      if (xhr.status === 404) {
+        errorMessage = 'Manège non trouvé (404)';
+      } else if (xhr.status === 500) {
+        errorMessage = 'Erreur serveur (500)';
+      }
+      afficherErreur(errorMessage + ' - ' + error);
     }
   });
 });

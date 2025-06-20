@@ -95,6 +95,14 @@ class AuthController extends BaseController {
                 $this->json(['success' => false, 'message' => 'Les mots de passe ne correspondent pas.'], 400);
                 return;
             }
+            if (strlen($password) < 6) {
+                $this->json(['success' => false, 'message' => 'Le mot de passe doit contenir au moins 6 caractères.'], 400);
+                return;
+            }
+            if (!preg_match('/[A-Za-z]/', $password) || !preg_match('/\d/', $password)) {
+                $this->json(['success' => false, 'message' => 'Le mot de passe doit contenir au moins une lettre et un chiffre.'], 400);
+                return;
+            }
             $userManager = new UserManager();
             if ($userManager->findByEmail($email)) {
                 $this->json(['success' => false, 'message' => 'Cet email est déjà utilisé.'], 400);
