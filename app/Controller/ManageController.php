@@ -7,8 +7,7 @@ class ManageController extends BaseController {
     public function index(): void {
         $this->requireAuth();
         $manager = new ManegeManager();
-        $maneges = $manager->findAllWithStatus(); // Correction : on utilise la bonne méthode
-        // Conversion en tableau associatif pour le frontend (évite undefined)
+        $maneges = $manager->findAllWithStatus(); 
         $data = array_map(function($manege) {
             return [
                 'id' => method_exists($manege, 'getId') ? $manege->getId() : ($manege['id'] ?? null),

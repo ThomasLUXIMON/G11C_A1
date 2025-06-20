@@ -1,5 +1,5 @@
 <?php
-// Charge les variables d'environnement depuis un fichier .env
+// Charge les variables d'environnement depuis .env
 function loadEnv($path) {
     if (!file_exists($path)) return;
     $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);

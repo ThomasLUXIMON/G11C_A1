@@ -1,6 +1,6 @@
 <?php
 /**
- * Structure MVC Complète pour le Système de Gestion de Manège
+ * Structure MVC 
  * 
  * Structure des dossiers:
  * /
@@ -36,10 +36,7 @@
  * │       ├── dashboard.js
  * │       ├── register.js
  * |       └── register.html
- * └── public/
- *     ├── css/
- *     ├── js/
- *     └── assets/
+ * 
  */
 
 // ==========================================
